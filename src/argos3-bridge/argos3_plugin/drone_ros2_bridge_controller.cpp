@@ -22,8 +22,16 @@ namespace argos {
 		}
 		// create node
 		m_pRos2Node = std::make_shared<rclcpp::Node>(GetId() + "_argos3_drone_controller");
-		// register publisher
+		// register publisher and subscriber
 		m_pPoseSensorPublisher = m_pRos2Node->create_publisher<geometry_msgs::msg::Pose>(GetId() + "/dronePoseSensor", 10);
+		m_pPoseActuatorSubscriber = m_pRos2Node->create_subscription<geometry_msgs::msg::Pose>(GetId() + "/dronePoseActuator", 10,
+			[this](geometry_msgs::msg::Pose::SharedPtr msg) {
+				m_pcFlightSystemActuator->SetTargetPosition(CVector3(msg->position.x,msg->position.y,msg->position.z));
+				m_pcFlightSystemActuator->SetTargetYawAngle(msg->orientation.z);
+			}
+		);
+
+		m_unStepCount = 0;
 	}
 
 	/****************************************/
@@ -54,6 +62,8 @@ namespace argos {
 
 		// spin ros node
 		rclcpp::spin_some(m_pRos2Node);
+
+		m_unStepCount++;
 	}
 
 	/****************************************/

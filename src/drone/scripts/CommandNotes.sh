@@ -1,0 +1,1 @@
+ros2 topic pub -1 /drone1/dronePoseActuator geometry_msgs/msg/Pose "{position: {x: -1.0, y: 0.0, z: 2.0}, orientation: {x: 0.0, y: 0.0, z: 1, w: 0.0}}"

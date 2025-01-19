@@ -17,7 +17,7 @@
     <test_controller library="@CMAKE_BINARY_DIR@/../../install/argos3-bridge/lib/argos3_plugin/libdrone_ros2_bridge_controller.so"
                      id="drone_ros2_bridge_controller">
       <actuators>
-        <drone_flight_system implementation="default" />
+        <drone_flight_system implementation="default" global_mode="true"/>
       </actuators>
       <sensors>
         <drone_flight_system implementation="default" />
