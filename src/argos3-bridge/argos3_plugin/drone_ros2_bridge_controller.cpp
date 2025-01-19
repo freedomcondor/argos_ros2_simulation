@@ -21,9 +21,9 @@ namespace argos {
 			rclcpp::init(0, nullptr);
 		}
 		// create node
-		m_pRos2Node = std::make_shared<rclcpp::Node>("argos3_drone_controller_" + GetId());
+		m_pRos2Node = std::make_shared<rclcpp::Node>(GetId() + "_argos3_drone_controller");
 		// register publisher
-		m_pPoseSensorPublisher = m_pRos2Node->create_publisher<geometry_msgs::msg::Pose>("drone_topic_" + GetId(), 10);
+		m_pPoseSensorPublisher = m_pRos2Node->create_publisher<geometry_msgs::msg::Pose>(GetId() + "/dronePoseSensor", 10);
 	}
 
 	/****************************************/

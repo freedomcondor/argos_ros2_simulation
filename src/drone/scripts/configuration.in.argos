@@ -12,9 +12,10 @@
   <!-- *************** -->
   <!-- * Controllers * -->
   <!-- *************** -->
+
   <controllers>
-    <test_controller library="/home/harry/code/argos3-ros2/install/argos3-bridge/lib/argos3_plugin/libdrone_ros2_bridge_controller.so"
-                     id="test_controller">
+    <test_controller library="@CMAKE_BINARY_DIR@/../../install/argos3-bridge/lib/argos3_plugin/libdrone_ros2_bridge_controller.so"
+                     id="drone_ros2_bridge_controller">
       <actuators>
         <drone_flight_system implementation="default" />
       </actuators>
@@ -31,12 +32,12 @@
   <arena size="5, 2, 2" positional_index="grid" positional_grid_size="25,25,1">
     <drone id="drone1">
       <body position="-2,0,0" orientation="0,0,0"/>
-      <controller config="test_controller"/>
+      <controller config="drone_ros2_bridge_controller"/>
     </drone>
 
     <drone id="drone2">
       <body position="-2,0,0" orientation="0,0,0"/>
-      <controller config="test_controller"/>
+      <controller config="drone_ros2_bridge_controller"/>
     </drone>
   </arena>
 
