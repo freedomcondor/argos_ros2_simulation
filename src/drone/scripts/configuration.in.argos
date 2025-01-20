@@ -26,6 +26,12 @@
     </test_controller>
   </controllers>
 
+  <!-- ****************** -->
+  <!-- * Loop functions * -->
+  <!-- ****************** -->
+  <loop_functions library="@CMAKE_BINARY_DIR@/../../install/argos3-bridge/lib/argos3_plugin/libmy_extensions"
+                  label="my_loop_functions" />
+
   <!-- *********************** -->
   <!-- * Arena configuration * -->
   <!-- *********************** -->
@@ -57,7 +63,10 @@
   <!-- * Visualization * -->
   <!-- ****************** -->
   <visualization>
-    <qt-opengl show_boundary="false"/>
+    <qt-opengl show_boundary="false">
+      <user_functions library="@CMAKE_BINARY_DIR@/../../install/argos3-bridge/lib/argos3_plugin/libmy_qtopengl_extensions"
+                      label="my_qtopengl_user_functions" />
+    </qt-opengl>
   </visualization>
 
 </argos-configuration>

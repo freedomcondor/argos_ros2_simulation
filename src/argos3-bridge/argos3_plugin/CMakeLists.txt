@@ -36,3 +36,48 @@ install(TARGETS
   drone_ros2_bridge_controller
   DESTINATION lib/${PROJECT_NAME}
 )
+
+#-------------------------------------------------------------------
+add_library(my_extensions SHARED
+  # add the debug actuator
+  extensions/debug/debug_entity.h
+  extensions/debug/debug_entity.cpp
+  extensions/debug/debug_default_actuator.h
+  extensions/debug/debug_default_actuator.cpp
+  # include the loop function
+  extensions/my_loop_functions.h
+  extensions/my_loop_functions.cpp
+)
+target_link_libraries(my_extensions
+  argos3core_${ARGOS_BUILD_FOR}
+  rclcpp::rclcpp
+)
+ament_target_dependencies(my_extensions
+  rclcpp
+  std_msgs
+  geometry_msgs
+)
+if(ARGOS_USE_DOUBLE)
+  target_compile_definitions(my_extensions PUBLIC BT_USE_DOUBLE_PRECISION)
+endif(ARGOS_USE_DOUBLE)
+
+# install into install folder
+install(TARGETS
+  my_extensions
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+if(ARGOS_QTOPENGL_FOUND)
+  add_library(my_qtopengl_extensions SHARED
+              qtopengl_extensions/my_qtopengl_user_functions.h
+              qtopengl_extensions/my_qtopengl_user_functions.cpp
+  )
+  target_link_libraries(my_qtopengl_extensions
+                        my_extensions)
+endif(ARGOS_QTOPENGL_FOUND)
+
+# install into install folder
+install(TARGETS
+  my_qtopengl_extensions
+  DESTINATION lib/${PROJECT_NAME}
+)
