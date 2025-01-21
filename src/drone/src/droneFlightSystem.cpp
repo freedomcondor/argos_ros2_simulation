@@ -8,31 +8,54 @@ class droneFlightSystem: public rclcpp::Node
 {
 public:
 	droneFlightSystem() : Node("drone"),
-		position_(), orientation_()
+		m_CurrentPosition(), m_CurrentOrientation()
 	{
-		auto topic_callback =
+		auto PositionSensorSubscriberCallback =
 			[this](geometry_msgs::msg::Pose::UniquePtr msg) -> void {
-				position_ = msg->position;
-				orientation_ = msg->orientation;
-				RCLCPP_INFO(this->get_logger(), "Received position: (%f, %f, %f)",
-					position_.x, position_.y, position_.z);
-				RCLCPP_INFO(this->get_logger(), "Received orientation: (%f, %f, %f, %f)",
-					orientation_.x, orientation_.y, orientation_.z, orientation_.w);
+				m_CurrentPosition = msg->position;
+				m_CurrentOrientation = msg->orientation;
 			};
-		subscription_ =
-			this->create_subscription<geometry_msgs::msg::Pose>("dronePoseSensor", 10, topic_callback);
+		m_PositionSensorSubscriber =
+			this->create_subscription<geometry_msgs::msg::Pose>("dronePoseSensor", 10, PositionSensorSubscriberCallback);
+
+		m_PositionActuator = this->create_publisher<geometry_msgs::msg::Pose>("dronePoseActuator", 10);
 	}
 
-private:
-	rclcpp::Subscription<geometry_msgs::msg::Pose>::SharedPtr subscription_;
-	geometry_msgs::msg::Point position_;
-	geometry_msgs::msg::Quaternion orientation_;
+	void publishPosition(double x, double y, double z, double yaw)
+	{
+		geometry_msgs::msg::Pose poseMessage;
+		poseMessage.position.x = x;
+		poseMessage.position.y = y;
+		poseMessage.position.z = z;
+		poseMessage.orientation.x = 0;
+		poseMessage.orientation.y = 0;
+		poseMessage.orientation.z = yaw;  // abuse z as yaw
+		poseMessage.orientation.w = 0;
+		m_PositionActuator->publish(poseMessage);
+	}
+
+	rclcpp::Subscription<geometry_msgs::msg::Pose>::SharedPtr m_PositionSensorSubscriber;
+	rclcpp::Publisher<geometry_msgs::msg::Pose>::SharedPtr m_PositionActuator;
+	geometry_msgs::msg::Point m_CurrentPosition;
+	geometry_msgs::msg::Quaternion m_CurrentOrientation;
 };
 
 int main(int argc, char * argv[])
 {
 	rclcpp::init(argc, argv);
-	rclcpp::spin(std::make_shared<droneFlightSystem>());
+	auto drone_node = std::make_shared<droneFlightSystem>();
+	rclcpp::Rate loop_rate(10); // 10 Hz
+	while (rclcpp::ok())
+	{
+		drone_node->publishPosition(
+			drone_node->m_CurrentPosition.x + 1,
+			drone_node->m_CurrentPosition.y,
+			drone_node->m_CurrentPosition.z,
+			0
+		); // 发布位置
+		rclcpp::spin_some(drone_node);
+		loop_rate.sleep();
+	}
 	rclcpp::shutdown();
 	return 0;
 }
