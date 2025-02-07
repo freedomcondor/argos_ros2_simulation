@@ -6,6 +6,8 @@
 #include "drone_ros2_bridge_controller.h"
 #include "geometry_msgs/msg/pose.hpp"
 
+#include<string>
+
 namespace argos {
 
 	/****************************************/
@@ -20,11 +22,12 @@ namespace argos {
 		if (!rclcpp::ok()) { // init only once
 			rclcpp::init(0, nullptr);
 		}
-		// create node
-		m_pRos2Node = std::make_shared<rclcpp::Node>(GetId() + "_argos3_drone_controller");
+		std::string ns = GetId(); // Declare ROS namespace
+		// create node with namespace
+		m_pRos2Node = std::make_shared<rclcpp::Node>("argos3_drone_controller", ns);
 		// register publisher and subscriber
-		m_pPoseSensorPublisher = m_pRos2Node->create_publisher<geometry_msgs::msg::Pose>(GetId() + "/dronePoseSensor", 10);
-		m_pPoseActuatorSubscriber = m_pRos2Node->create_subscription<geometry_msgs::msg::Pose>(GetId() + "/dronePoseActuator", 10,
+		m_pPoseSensorPublisher = m_pRos2Node->create_publisher<geometry_msgs::msg::Pose>("dronePoseSensor", 10);
+		m_pPoseActuatorSubscriber = m_pRos2Node->create_subscription<geometry_msgs::msg::Pose>("dronePoseActuator", 10,
 			[this](geometry_msgs::msg::Pose::SharedPtr msg) {
 				m_pcFlightSystemActuator->SetTargetPosition(CVector3(msg->position.x,msg->position.y,msg->position.z));
 				m_pcFlightSystemActuator->SetTargetYawAngle(msg->orientation.z);
