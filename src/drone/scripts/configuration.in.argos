@@ -35,9 +35,9 @@
   <!-- *********************** -->
   <!-- * Arena configuration * -->
   <!-- *********************** -->
-  <arena size="5, 2, 2" positional_index="grid" positional_grid_size="25,25,1">
+  <arena size="100, 100, 20" positional_index="grid" positional_grid_size="25,25,1">
     <drone id="drone1">
-      <body position="-2,0,0" orientation="0,0,0"/>
+      <body position="-2,1,0" orientation="0,0,0"/>
       <controller config="drone_ros2_bridge_controller"/>
     </drone>
 

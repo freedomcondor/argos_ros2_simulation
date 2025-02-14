@@ -2,11 +2,11 @@
     <executable cmd="argos3 -c build/drone/scripts/configuration.argos" output="screen" shell="true" />
 
     <group> <push-ros-namespace namespace="drone1" />
-        <node pkg="drone" exec="droneFlightSystem" name="drone_node" output="screen" />
+        <node pkg="drone" exec="droneFlightSystem" output="screen" />
     </group>
 
     <group> <push-ros-namespace namespace="drone2" />
-        <node pkg="drone" exec="droneFlightSystem" name="drone_node" output="screen" />
+        <node pkg="drone" exec="droneFlightSystem" output="screen" />
     </group>
 
     <node name="monitor" pkg="rqt_graph" exec="rqt_graph" />
