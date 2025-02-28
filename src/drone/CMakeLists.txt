@@ -38,6 +38,7 @@ ament_target_dependencies(droneFlightSystem
   rclcpp
   std_msgs
   geometry_msgs
+  mathlib
 )
 
 add_executable(droneSwarmSystem src/droneSwarmSystem.cpp)
