@@ -33,10 +33,6 @@ public:
 		m_PoseSharingPublisher =
 			this->create_publisher<drone::msg::PoseSharing>("/poseSharing", 10);
 
-		// declare path publisher
-		m_PathPublisher =
-			this->create_publisher<drone::msg::Path>("dronePath", 10);
-
 		m_VelocityActuatorPublisher =
 			this->create_publisher<geometry_msgs::msg::Pose>("droneVelocityActuator", 10);
 
@@ -44,82 +40,55 @@ public:
 		m_PositionSensorSubscriber = this->create_subscription<geometry_msgs::msg::Pose>("dronePoseSensor", 10,
 			[this](geometry_msgs::msg::Pose::UniquePtr msg) -> void {
 				m_CurrentTransform = CTransform(*msg);
-
-				drone::msg::PoseSharing poseSharingMsg;
-				poseSharingMsg.id = m_strMyID;
-				poseSharingMsg.pose = *msg;
-				m_PoseSharingPublisher->publish(poseSharingMsg);
 			}
 		);
 
 		// 订阅PoseSharing消息
 		m_PoseSharingSubscriber = this->create_subscription<drone::msg::PoseSharing>("/poseSharing", 10,
 			[this](const drone::msg::PoseSharing::SharedPtr msg) -> void{
-				m_SwarmPoses[msg->id] = CTransform(msg->pose) - m_CurrentTransform;
+				if (msg->id == m_strMyID) return;
+				CTransform diff = CTransform(msg->pose) - m_CurrentTransform;
+				if (diff.m_Position.Length() < 5)
+					m_SwarmPoses[msg->id] = CTransform(msg->pose) - m_CurrentTransform;
+				else
+					m_SwarmPoses.erase(msg->id); // Remove the drone's pose if it's too far
 			}
+		);
+
+		// 创建定时器，一定频率调用一次step函数
+		m_Timer = this->create_wall_timer(
+			std::chrono::milliseconds(200), // ms
+			[this]() { this->step(); } // 定时器回调
 		);
 	}
 
 	void step() {
-		//setVelocity(0.1, 0, 0.1, 0.1);
+		// share myself
+		drone::msg::PoseSharing poseSharingMsg;
+		poseSharingMsg.id = m_strMyID;
+		poseSharingMsg.pose.position.x = m_CurrentTransform.m_Position.GetX();
+		poseSharingMsg.pose.position.y = m_CurrentTransform.m_Position.GetY();
+		poseSharingMsg.pose.position.z = m_CurrentTransform.m_Position.GetZ();
+		poseSharingMsg.pose.orientation.x = m_CurrentTransform.m_Orientation.GetX();
+		poseSharingMsg.pose.orientation.y = m_CurrentTransform.m_Orientation.GetY();
+		poseSharingMsg.pose.orientation.z = m_CurrentTransform.m_Orientation.GetZ();
+		poseSharingMsg.pose.orientation.w = m_CurrentTransform.m_Orientation.GetW();
+		m_PoseSharingPublisher->publish(poseSharingMsg);
 
+		// -------------------------------------------------------------
 		CVector3 vTotal = CVector3();
 
 		for (const auto& swarmPose : m_SwarmPoses) {
 			const string& id = swarmPose.first;
 			const CTransform& pose = swarmPose.second;
-
-			// Check if the current drone is drone1 (assuming drone1 has a specific ID)
-			/*
-			if ((m_strMyID == "drone2") && (id == "drone1")) {
-				CTransform offset = CTransform(CVector3(3, 0, 0), CQuaternion());
-				CTransform newTransform = (pose) * offset;
-				CVector3 v = CVector3(newTransform.m_Position).Normalize() * newTransform.m_Position.Length() * 0.5;
-				if (v.Length() > 0.3) v = v.Normalize() * 0.3;
-				setVelocity(v);
-			}
-			*/
-			if (m_strMyID != id) {
-				CVector3 v = CVector3(pose.m_Position).Normalize() * (pose.m_Position.Length() - 3) * 0.3;
+			if ((m_strMyID != id) && (pose.m_Position.Length() != 0)) {
+				CVector3 v = CVector3(pose.m_Position).Normalize() * (pose.m_Position.Length() - 3) * 0.1;
 				if (v.Length() > 0.5) v = v.Normalize() * 0.5;
 				vTotal += v;
 			}
 		}
+
 		setVelocity(vTotal);
-
-		/*
-		for (const auto& swarmPose : m_SwarmPoses) {
-			const string& id = swarmPose.first;
-			const CTransform& pose = swarmPose.second;
-
-			// Check if the current drone is drone1 (assuming drone1 has a specific ID)
-			if ((m_strMyID == "drone2") && (id == "drone1")) {
-				CTransform offset = CTransform(
-					CVector3(3, 0, 0),
-					CQuaternion()
-				);
-
-				CTransform newPosition = pose * offset;
-
-				double Yaw, Roll, Pitch;
-				newPosition.m_Orientation.ToEulerAngles(Yaw, Roll, Pitch);
-
-				// Publish the new position for drone2
-				drone::msg::Waypoint waypoint;
-				waypoint.point.x = newPosition.m_Position.GetX();
-				waypoint.point.y = newPosition.m_Position.GetY();
-				waypoint.point.z = newPosition.m_Position.GetZ();
-				waypoint.yaw_flag = true;
-				waypoint.yaw = Yaw;
-
-				vector<drone::msg::Waypoint> waypoints = {waypoint};
-				drone::msg::Path path;
-				path.waypoints = waypoints;
-				m_PathPublisher->publish(path);
-			}
-		}
-		*/
-
 	}
 
 	void setVelocity(CVector3 v) {
@@ -145,6 +114,7 @@ private:
 	rclcpp::Publisher<drone::msg::PoseSharing>::SharedPtr m_PoseSharingPublisher;
 	rclcpp::Publisher<drone::msg::Path>::SharedPtr m_PathPublisher;
 	rclcpp::Publisher<geometry_msgs::msg::Pose>::SharedPtr m_VelocityActuatorPublisher;
+	rclcpp::TimerBase::SharedPtr m_Timer; // 定时器
 
 	CTransform m_CurrentTransform;
 	string m_strMyID;
@@ -156,14 +126,9 @@ int main(int argc, char * argv[])
 {
 	rclcpp::init(argc, argv);
 	auto swarm_node = std::make_shared<droneSwarmSystem>();
-	//rclcpp::Rate loop_rate(5); // 5 Hz
-	//rclcpp::spin(drone_node);
-	while (rclcpp::ok())
-	{
-		rclcpp::spin_some(swarm_node);
-		swarm_node->step();
-		//loop_rate.sleep();
-	}
+
+	rclcpp::spin(swarm_node);
+
 	rclcpp::shutdown();
 	return 0;
 }
