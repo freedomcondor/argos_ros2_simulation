@@ -29,10 +29,6 @@ public:
 			m_strMyID = m_strMyID.substr(1); // Remove leading '/'
 		}
 
-		// declare position sharing publisher
-		m_PoseSharingPublisher =
-			this->create_publisher<drone::msg::PoseSharing>("/poseSharing", 10);
-
 		m_VelocityActuatorPublisher =
 			this->create_publisher<geometry_msgs::msg::Pose>("droneVelocityActuator", 10);
 
@@ -43,19 +39,29 @@ public:
 			}
 		);
 
-		// 订阅PoseSharing消息
+		// declare position sharing publisher and subscriber
+		m_PoseSharingPublisher =
+			this->create_publisher<drone::msg::PoseSharing>("/poseSharing", 10);
+
+		this->declare_parameter("distance_threshold", 5.0);
+		this->declare_parameter("target_distance", 3.0);
+
 		m_PoseSharingSubscriber = this->create_subscription<drone::msg::PoseSharing>("/poseSharing", 10,
 			[this](const drone::msg::PoseSharing::SharedPtr msg) -> void{
 				if (msg->id == m_strMyID) return;
-				CTransform diff = CTransform(msg->pose) - m_CurrentTransform;
-				if (diff.m_Position.Length() < 5)
+
+				double distanceThreshold;
+				this->get_parameter("distance_threshold", distanceThreshold);
+
+				CTransform neighbour = CTransform(msg->pose);
+				if ((neighbour.m_Position - m_CurrentTransform.m_Position).Length() < distanceThreshold)
 					m_SwarmPoses[msg->id] = CTransform(msg->pose) - m_CurrentTransform;
 				else
 					m_SwarmPoses.erase(msg->id); // Remove the drone's pose if it's too far
 			}
 		);
 
-		// 创建定时器，一定频率调用一次step函数
+		// step timer, call step() in a frequency
 		m_Timer = this->create_wall_timer(
 			std::chrono::milliseconds(200), // ms
 			[this]() { this->step(); } // 定时器回调
@@ -66,23 +72,19 @@ public:
 		// share myself
 		drone::msg::PoseSharing poseSharingMsg;
 		poseSharingMsg.id = m_strMyID;
-		poseSharingMsg.pose.position.x = m_CurrentTransform.m_Position.GetX();
-		poseSharingMsg.pose.position.y = m_CurrentTransform.m_Position.GetY();
-		poseSharingMsg.pose.position.z = m_CurrentTransform.m_Position.GetZ();
-		poseSharingMsg.pose.orientation.x = m_CurrentTransform.m_Orientation.GetX();
-		poseSharingMsg.pose.orientation.y = m_CurrentTransform.m_Orientation.GetY();
-		poseSharingMsg.pose.orientation.z = m_CurrentTransform.m_Orientation.GetZ();
-		poseSharingMsg.pose.orientation.w = m_CurrentTransform.m_Orientation.GetW();
+		poseSharingMsg.pose = m_CurrentTransform.ToGeometryMsgPose();
 		m_PoseSharingPublisher->publish(poseSharingMsg);
 
 		// -------------------------------------------------------------
 		CVector3 vTotal = CVector3();
+		double targetDistance;
+		this->get_parameter("target_distance", targetDistance);
 
 		for (const auto& swarmPose : m_SwarmPoses) {
 			const string& id = swarmPose.first;
 			const CTransform& pose = swarmPose.second;
 			if ((m_strMyID != id) && (pose.m_Position.Length() != 0)) {
-				CVector3 v = CVector3(pose.m_Position).Normalize() * (pose.m_Position.Length() - 3) * 0.1;
+				CVector3 v = CVector3(pose.m_Position).Normalize() * (pose.m_Position.Length() - targetDistance) * 0.06;
 				if (v.Length() > 0.5) v = v.Normalize() * 0.5;
 				vTotal += v;
 			}
@@ -110,25 +112,24 @@ public:
 	}
 
 private:
-	rclcpp::Subscription<geometry_msgs::msg::Pose>::SharedPtr m_PositionSensorSubscriber;
-	rclcpp::Publisher<drone::msg::PoseSharing>::SharedPtr m_PoseSharingPublisher;
-	rclcpp::Publisher<drone::msg::Path>::SharedPtr m_PathPublisher;
-	rclcpp::Publisher<geometry_msgs::msg::Pose>::SharedPtr m_VelocityActuatorPublisher;
-	rclcpp::TimerBase::SharedPtr m_Timer; // 定时器
-
-	CTransform m_CurrentTransform;
 	string m_strMyID;
+	CTransform m_CurrentTransform;
+	std::map<string, CTransform> m_SwarmPoses;
+
+	rclcpp::Subscription<geometry_msgs::msg::Pose>::SharedPtr m_PositionSensorSubscriber;
+	rclcpp::Publisher<geometry_msgs::msg::Pose>::SharedPtr m_VelocityActuatorPublisher;
+
 	rclcpp::Subscription<drone::msg::PoseSharing>::SharedPtr m_PoseSharingSubscriber;
-	std::map<string, CTransform> m_SwarmPoses;  // 存储所有无人机的位置和姿态
+	rclcpp::Publisher<drone::msg::PoseSharing>::SharedPtr m_PoseSharingPublisher;
+
+	rclcpp::TimerBase::SharedPtr m_Timer; // 定时器
 };
 
 int main(int argc, char * argv[])
 {
 	rclcpp::init(argc, argv);
 	auto swarm_node = std::make_shared<droneSwarmSystem>();
-
 	rclcpp::spin(swarm_node);
-
 	rclcpp::shutdown();
 	return 0;
 }

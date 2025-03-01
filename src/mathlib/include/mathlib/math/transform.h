@@ -18,6 +18,11 @@ namespace swarmMathLib {
          m_Orientation = CQuaternion();
       }
 
+      CTransform(CVector3 _position, CQuaternion _orientation) {
+         m_Position = _position;
+         m_Orientation = _orientation;
+      }
+
       CTransform(geometry_msgs::msg::Pose _pose) {
          m_Position = CVector3(
             _pose.position.x,
@@ -32,9 +37,16 @@ namespace swarmMathLib {
          );
       }
 
-      CTransform(CVector3 _position, CQuaternion _orientation) {
-         m_Position = _position;
-         m_Orientation = _orientation;
+      geometry_msgs::msg::Pose ToGeometryMsgPose() {
+         geometry_msgs::msg::Pose poseMsg;
+         poseMsg.position.x = m_Position.GetX();
+         poseMsg.position.y = m_Position.GetY();
+         poseMsg.position.z = m_Position.GetZ();
+         poseMsg.orientation.w = m_Orientation.GetW();
+         poseMsg.orientation.x = m_Orientation.GetX();
+         poseMsg.orientation.y = m_Orientation.GetY();
+         poseMsg.orientation.z = m_Orientation.GetZ();
+         return poseMsg;
       }
 
       inline CTransform& operator*=(const CTransform& c_transform) {
