@@ -17,6 +17,9 @@ using std::map;
 #include "mathlib/math/transform.h"
 using namespace swarmMathLib;
 
+#include "sonslib/sons.h"
+using namespace SoNSLib;
+
 class droneSwarmSystem: public rclcpp::Node
 {
 public:
@@ -82,6 +85,8 @@ public:
 
 	void step() {
 		send("drone1", "I am " + m_strMyID);
+
+		RCLCPP_INFO(this->get_logger(), "%s", sons.id.c_str());
 
 		// share myself
 		drone::msg::PoseSharing poseSharingMsg;
@@ -162,6 +167,8 @@ private:
 	rclcpp::Publisher<drone::msg::PoseSharing>::SharedPtr m_PoseSharingPublisher;
 
 	rclcpp::TimerBase::SharedPtr m_Timer; // 定时器
+
+	SoNS sons;
 };
 
 int main(int argc, char * argv[])

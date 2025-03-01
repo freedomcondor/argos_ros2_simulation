@@ -23,6 +23,7 @@ find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(mathlib REQUIRED)
+find_package(sonslib REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
@@ -37,6 +38,7 @@ ament_target_dependencies(droneSwarmSystem
   std_msgs
   geometry_msgs
   mathlib
+  sonslib
 )
 
 rosidl_get_typesupport_target(cpp_typesupport_target
