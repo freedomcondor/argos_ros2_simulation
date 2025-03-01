@@ -9,10 +9,9 @@ using std::map;
 
 #include "rclcpp/rclcpp.hpp"
 #include "geometry_msgs/msg/pose.hpp"
+#include "std_msgs/msg/byte_multi_array.hpp"
 
 #include "drone/msg/pose_sharing.hpp"
-#include "drone/msg/waypoint.hpp"
-#include "drone/msg/path.hpp"
 
 #include "mathlib/math/vector3.h"
 #include "mathlib/math/transform.h"
@@ -39,6 +38,13 @@ public:
 			}
 		);
 
+		m_SwarmCommunicationSubscriber = this->create_subscription<std_msgs::msg::ByteMultiArray>("communication", 10,
+			[this](const std_msgs::msg::ByteMultiArray::SharedPtr msg) -> void {
+				string binaryMessageString(msg->data.begin(), msg->data.end());
+				RCLCPP_INFO(this->get_logger(), "I am %s, Received binary message : %s", m_strMyID.c_str(), binaryMessageString.c_str());
+			}
+		);
+
 		// declare position sharing publisher and subscriber
 		m_PoseSharingPublisher =
 			this->create_publisher<drone::msg::PoseSharing>("/poseSharing", 10);
@@ -54,10 +60,16 @@ public:
 				this->get_parameter("distance_threshold", distanceThreshold);
 
 				CTransform neighbour = CTransform(msg->pose);
-				if ((neighbour.m_Position - m_CurrentTransform.m_Position).Length() < distanceThreshold)
+				if ((neighbour.m_Position - m_CurrentTransform.m_Position).Length() < distanceThreshold) {
 					m_SwarmPoses[msg->id] = CTransform(msg->pose) - m_CurrentTransform;
-				else
+					if (m_SwarmCommunicationPublishers.find(msg->id) == m_SwarmCommunicationPublishers.end()) {
+						m_SwarmCommunicationPublishers[msg->id] = this->create_publisher<std_msgs::msg::ByteMultiArray>("/" + msg->id + "/communication", 10);
+					}
+				}
+				else {
 					m_SwarmPoses.erase(msg->id); // Remove the drone's pose if it's too far
+					m_SwarmCommunicationPublishers.erase(msg->id); // Unregister the publisher if out of range
+				}
 			}
 		);
 
@@ -69,6 +81,8 @@ public:
 	}
 
 	void step() {
+		send("drone1", "I am " + m_strMyID);
+
 		// share myself
 		drone::msg::PoseSharing poseSharingMsg;
 		poseSharingMsg.id = m_strMyID;
@@ -93,6 +107,28 @@ public:
 		setVelocity(vTotal);
 	}
 
+	void send(const string& id, const string& msg) {
+		std::vector<uint8_t> binaryData(msg.begin(), msg.end());
+		send(id, binaryData);
+	}
+
+	void send(const string& id, const std::vector<uint8_t>& binaryData) {
+		std_msgs::msg::ByteMultiArray message;
+		message.data = binaryData; // 将二进制数据赋值给消息
+
+		if (id == "BROADCAST") {
+			for (const auto& publisher : m_SwarmCommunicationPublishers) {
+				auto publisherPtr = publisher.second;
+				publisherPtr->publish(message);
+			}
+		} else {
+			if (m_SwarmCommunicationPublishers.find(id) != m_SwarmCommunicationPublishers.end()) {
+				auto publisherPtr = m_SwarmCommunicationPublishers[id];
+				publisherPtr->publish(message);
+			}
+		}
+	}
+
 	void setVelocity(CVector3 v) {
 		setVelocity(v.GetX(), v.GetY(), v.GetZ(), 0);
 	}
@@ -115,6 +151,9 @@ private:
 	string m_strMyID;
 	CTransform m_CurrentTransform;
 	std::map<string, CTransform> m_SwarmPoses;
+
+	std::map<string, rclcpp::Publisher<std_msgs::msg::ByteMultiArray>::SharedPtr> m_SwarmCommunicationPublishers;
+	rclcpp::Subscription<std_msgs::msg::ByteMultiArray>::SharedPtr m_SwarmCommunicationSubscriber;
 
 	rclcpp::Subscription<geometry_msgs::msg::Pose>::SharedPtr m_PositionSensorSubscriber;
 	rclcpp::Publisher<geometry_msgs::msg::Pose>::SharedPtr m_VelocityActuatorPublisher;
