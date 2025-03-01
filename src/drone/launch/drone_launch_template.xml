@@ -1,0 +1,8 @@
+<launch>
+    <executable cmd="argos3 -c build/drone/scripts/configuration.argos" output="screen" shell="true" />
+
+    DRONES
+
+    <node name="monitor" pkg="rqt_graph" exec="rqt_graph" />
+
+</launch> 

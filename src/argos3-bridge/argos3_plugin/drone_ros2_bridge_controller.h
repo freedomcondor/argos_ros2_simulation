@@ -36,5 +36,6 @@ namespace argos {
 		std::shared_ptr<rclcpp::Node> m_pRos2Node;
 		rclcpp::Publisher<geometry_msgs::msg::Pose>::SharedPtr m_pPoseSensorPublisher;
 		rclcpp::Subscription<geometry_msgs::msg::Pose>::SharedPtr m_pPoseActuatorSubscriber;
+		rclcpp::Subscription<geometry_msgs::msg::Pose>::SharedPtr m_pVelocityActuatorSubscriber;
 	};
 }

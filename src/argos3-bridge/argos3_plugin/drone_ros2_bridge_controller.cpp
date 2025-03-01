@@ -33,6 +33,12 @@ namespace argos {
 				m_pcFlightSystemActuator->SetTargetYawAngle(msg->orientation.z);
 			}
 		);
+		m_pVelocityActuatorSubscriber = m_pRos2Node->create_subscription<geometry_msgs::msg::Pose>("droneVelocityActuator", 10,
+			[this](geometry_msgs::msg::Pose::SharedPtr msg) {
+				m_pcFlightSystemActuator->SetTargetVelocity(CVector3(msg->position.x,msg->position.y,msg->position.z));
+				m_pcFlightSystemActuator->SetTargetYawVelocity(msg->orientation.z);
+			}
+		);
 
 		m_unStepCount = 0;
 	}
@@ -63,7 +69,6 @@ namespace argos {
 
 		m_pPoseSensorPublisher->publish(poseMessage);
 
-		// spin ros node
 		rclcpp::spin_some(m_pRos2Node);
 
 		m_unStepCount++;

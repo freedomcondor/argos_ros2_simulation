@@ -59,7 +59,8 @@ install(TARGETS   droneSwarmSystem  DESTINATION lib/${PROJECT_NAME})
 install(DIRECTORY launch/  DESTINATION share/${PROJECT_NAME}/launch)
 install(DIRECTORY scripts/  DESTINATION share/${PROJECT_NAME}/scripts)
 
-configure_file(scripts/configuration.in.argos scripts/configuration.argos)
+configure_file(scripts/configuration_example.in.argos scripts/configuration_example.argos)
+configure_file(scripts/configuration_template.in.argos scripts/configuration_template.argos)
 
 #-------------------------------------------------------------------
 

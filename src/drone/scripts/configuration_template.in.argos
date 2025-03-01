@@ -17,7 +17,7 @@
     <test_controller library="@CMAKE_BINARY_DIR@/../../install/argos3-bridge/lib/argos3_plugin/libdrone_ros2_bridge_controller.so"
                      id="drone_ros2_bridge_controller">
       <actuators>
-        <drone_flight_system implementation="default" global_mode="true"/>
+        <drone_flight_system implementation="default" global_mode="true" velocity_mode="true"/>
       </actuators>
       <sensors>
         <drone_flight_system implementation="default" />
@@ -36,15 +36,9 @@
   <!-- * Arena configuration * -->
   <!-- *********************** -->
   <arena size="100, 100, 20" positional_index="grid" positional_grid_size="25,25,1">
-    <drone id="drone1">
-      <body position="-2,1,0" orientation="0,0,0"/>
-      <controller config="drone_ros2_bridge_controller"/>
-    </drone>
 
-    <drone id="drone2">
-      <body position="-2,0,0" orientation="0,0,0"/>
-      <controller config="drone_ros2_bridge_controller"/>
-    </drone>
+    DRONES
+  
   </arena>
 
   <!-- ******************* -->

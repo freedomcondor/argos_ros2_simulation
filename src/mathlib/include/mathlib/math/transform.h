@@ -50,6 +50,15 @@ namespace swarmMathLib {
          return result;
       }
 
+      /** A x B = C
+       *  C - A = B
+       */
+      inline CTransform operator-(const CTransform& c_transform) const {
+         CTransform result;
+         result = c_transform.Inverse() * (*this);
+         return result;
+      }
+
       inline CTransform Inverse() const {
          CTransform result;
          result.m_Orientation = m_Orientation.Inverse();

@@ -1,0 +1,79 @@
+<?xml version="1.0" ?>
+<argos-configuration>
+
+  <!-- ************************* -->
+  <!-- * General configuration * -->
+  <!-- ************************* -->
+  <framework>
+    <system threads="0" />
+    <experiment length="0" ticks_per_second="10" random_seed="0" />
+  </framework>
+  
+  <!-- *************** -->
+  <!-- * Controllers * -->
+  <!-- *************** -->
+
+  <controllers>
+    <test_controller library="@CMAKE_BINARY_DIR@/../../install/argos3-bridge/lib/argos3_plugin/libdrone_ros2_bridge_controller.so"
+                     id="drone_ros2_bridge_controller">
+      <actuators>
+        <drone_flight_system implementation="default" global_mode="true" velocity_mode="true"/>
+      </actuators>
+      <sensors>
+        <drone_flight_system implementation="default" />
+      </sensors>
+      <params />
+    </test_controller>
+  </controllers>
+
+  <!-- ****************** -->
+  <!-- * Loop functions * -->
+  <!-- ****************** -->
+  <loop_functions library="@CMAKE_BINARY_DIR@/../../install/argos3-bridge/lib/argos3_plugin/libmy_extensions"
+                  label="my_loop_functions" />
+
+  <!-- *********************** -->
+  <!-- * Arena configuration * -->
+  <!-- *********************** -->
+  <arena size="100, 100, 20" positional_index="grid" positional_grid_size="25,25,1">
+
+    <drone id="drone1">
+      <body position="0,0,0" orientation="0,0,0"/>
+      <controller config="drone_ros2_bridge_controller"/>
+    </drone>
+    
+    <drone id="drone2">
+      <body position="1,0,0" orientation="0,0,0"/>
+      <controller config="drone_ros2_bridge_controller"/>
+    </drone>
+
+    <drone id="drone3">
+      <body position="1,1,0" orientation="0,0,0"/>
+      <controller config="drone_ros2_bridge_controller"/>
+    </drone>
+  
+  </arena>
+
+  <!-- ******************* -->
+  <!-- * Physics engines * -->
+  <!-- ******************* -->
+  <physics_engines>
+    <pointmass3d id="pm3d" />
+  </physics_engines>
+
+  <!-- ********* -->
+  <!-- * Media * -->
+  <!-- ********* -->
+  <media />
+
+  <!-- ****************** -->
+  <!-- * Visualization * -->
+  <!-- ****************** -->
+  <visualization>
+    <qt-opengl show_boundary="false">
+      <user_functions library="@CMAKE_BINARY_DIR@/../../install/argos3-bridge/lib/argos3_plugin/libmy_qtopengl_extensions"
+                      label="my_qtopengl_user_functions" />
+    </qt-opengl>
+  </visualization>
+
+</argos-configuration>
