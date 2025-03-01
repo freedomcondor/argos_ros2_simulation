@@ -26,10 +26,20 @@ find_package(mathlib REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
+  "msg/Waypoint.msg"
+  "msg/Path.msg"
   "msg/PoseSharing.msg"
   DEPENDENCIES geometry_msgs std_msgs
 )
 ament_export_dependencies(rosidl_default_runtime)
+
+add_executable(droneFlightSystem src/droneFlightSystem.cpp)
+ament_target_dependencies(droneFlightSystem
+  rclcpp
+  std_msgs
+  geometry_msgs
+  mathlib
+)
 
 add_executable(droneSwarmSystem src/droneSwarmSystem.cpp)
 ament_target_dependencies(droneSwarmSystem
@@ -41,8 +51,10 @@ ament_target_dependencies(droneSwarmSystem
 
 rosidl_get_typesupport_target(cpp_typesupport_target
   ${PROJECT_NAME} rosidl_typesupport_cpp)
+target_link_libraries(droneFlightSystem "${cpp_typesupport_target}")
 target_link_libraries(droneSwarmSystem "${cpp_typesupport_target}")
 
+install(TARGETS   droneFlightSystem  DESTINATION lib/${PROJECT_NAME})
 install(TARGETS   droneSwarmSystem  DESTINATION lib/${PROJECT_NAME})
 install(DIRECTORY launch/  DESTINATION share/${PROJECT_NAME}/launch)
 install(DIRECTORY scripts/  DESTINATION share/${PROJECT_NAME}/scripts)
