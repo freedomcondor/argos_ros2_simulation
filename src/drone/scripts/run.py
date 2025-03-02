@@ -28,7 +28,8 @@ def generate_drone_launch_xml(drone_name) :
 	txt = '''
 	<group> <push-ros-namespace namespace="{}" />
 		<!--node pkg="drone" exec="droneFlightSystem" output="screen" /-->
-		<node pkg="drone" exec="droneSwarmSystem" output="screen" />
+		<!--node pkg="drone" exec="droneSwarmSystem" output="screen" /-->
+		<node pkg="drone" exec="droneSwarmSystem" output="log"/>
 	</group>
 	'''.format(drone_name)
 	return txt

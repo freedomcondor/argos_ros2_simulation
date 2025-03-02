@@ -43,9 +43,18 @@ namespace SoNSLib {
 		vector<uint8_t> binary;
 	};
 
+	struct SoNSArrow{
+		enum Color { RED, GREEN, BLUE, YELLOW, BLACK, WHITE };
+		Color color;
+		CVector3 arrow;
+		SoNSArrow(Color _color, const CVector3& _arrow):color(_color),arrow(_arrow) {}
+	};
+
 	struct SoNSStepResult {
 		CVector3 outputVelocity;
 		vector<struct SoNSMessage> messages;
+		vector<struct SoNSArrow> drawArrows;
+		string logMessage;
 	};
 
 }

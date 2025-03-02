@@ -34,6 +34,12 @@ namespace swarmMathLib {
          return result;
       }
 
+      inline CVector3 operator*(const CVector3& c_vector) const {
+         CVector3 result;
+         result = this->m_Position + CVector3(c_vector).Rotate(this->m_Orientation);
+         return result;
+      }
+
       /** A x B = C
        *  C - A = B
        */

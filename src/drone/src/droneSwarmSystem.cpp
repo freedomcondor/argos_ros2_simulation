@@ -82,6 +82,9 @@ public:
 			}
 		);
 
+		m_drawArrowPublisher =
+			this->create_publisher<geometry_msgs::msg::Pose>("/drawArrows", 10);
+
 		// step timer, call step() in a frequency
 		m_Timer = this->create_wall_timer(
 			std::chrono::milliseconds(200), // ms
@@ -108,38 +111,28 @@ public:
 		struct SoNSStepResult result = sons.Step(0.2, neighbours, m_receivedMessages);
 		m_receivedMessages.clear();
 
+		// Log the message from SoNS
+		RCLCPP_INFO(this->get_logger(), "%s", result.logMessage.c_str());
+
 		// enforce output velocity
 		setVelocity(result.outputVelocity);
 		// send result.messages
 		for (const auto& message : result.messages) {
-			send(message.id, message.binary);
+			sendMessage(message.id, message.binary);
 		}
-
-		// -------------------------------------------------------------
-		/*
-		CVector3 vTotal = CVector3();
-		double targetDistance;
-		this->get_parameter("target_distance", targetDistance);
-
-		for (const auto& swarmPose : m_SwarmPoses) {
-			const string& id = swarmPose.first;
-			const CTransform& pose = swarmPose.second;
-			if ((m_strMyID != id) && (pose.m_Position.Length() != 0)) {
-				CVector3 v = CVector3(pose.m_Position).Normalize() * (pose.m_Position.Length() - targetDistance) * 0.06;
-				if (v.Length() > 0.5) v = v.Normalize() * 0.5;
-				vTotal += v;
-			}
+		// drawArrows
+		for (const auto& arrow: result.drawArrows) {
+			drawArrow(CVector3(), arrow.arrow, arrow.color);
 		}
-		setVelocity(vTotal);
-		*/
 	}
 
-	void send(const string& id, const string& msg) {
+	//------------------------------------------------------------------------------
+	void sendMessage(const string& id, const string& msg) {
 		std::vector<uint8_t> binaryData(msg.begin(), msg.end());
-		send(id, binaryData);
+		sendMessage(id, binaryData);
 	}
 
-	void send(const string& id, const vector<uint8_t>& binaryData) {
+	void sendMessage(const string& id, const vector<uint8_t>& binaryData) {
 		drone::msg::Message message;
 		message.id = m_strMyID; // 设置ID
 		message.binary.data = binaryData; // 将二进制数据赋值给消息
@@ -155,6 +148,29 @@ public:
 				publisherPtr->publish(message);
 			}
 		}
+	}
+
+	void drawArrow(CVector3 from, CVector3 to, SoNSArrow::Color color) {
+		from = m_CurrentTransform * from;
+		to = m_CurrentTransform * to;
+		geometry_msgs::msg::Pose arrow;
+		arrow.position.x = from.GetX();
+		arrow.position.y = from.GetY();
+		arrow.position.z = from.GetZ();
+		arrow.orientation.x = to.GetX();
+		arrow.orientation.y = to.GetY();
+		arrow.orientation.z = to.GetZ();
+
+		switch (color) {
+			case SoNSArrow::Color::RED:    arrow.orientation.w = 0; break;
+			case SoNSArrow::Color::GREEN:  arrow.orientation.w = 1; break;
+			case SoNSArrow::Color::BLUE:   arrow.orientation.w = 2; break;
+			case SoNSArrow::Color::YELLOW: arrow.orientation.w = 3; break;
+			case SoNSArrow::Color::BLACK:  arrow.orientation.w = 4; break;
+			default:                       arrow.orientation.w = 5; break;
+		}
+
+		m_drawArrowPublisher->publish(arrow);
 	}
 
 	void setVelocity(CVector3 v) {
@@ -217,6 +233,8 @@ private:
 
 	rclcpp::Subscription<drone::msg::PoseSharing>::SharedPtr m_PoseSharingSubscriber;
 	rclcpp::Publisher<drone::msg::PoseSharing>::SharedPtr m_PoseSharingPublisher;
+
+	rclcpp::Publisher<geometry_msgs::msg::Pose>::SharedPtr m_drawArrowPublisher;
 
 	rclcpp::TimerBase::SharedPtr m_Timer; // 定时器
 

@@ -3,6 +3,6 @@
 
     DRONES
 
-    <node name="monitor" pkg="rqt_graph" exec="rqt_graph" />
+    <node name="monitor" pkg="rqt_gui" exec="rqt_gui" />
 
 </launch> 

@@ -1,6 +1,7 @@
 #include "sons.h"
 #include <iostream>
 #include <random>
+#include <sstream>
 using std::cout;
 using std::endl;
 
@@ -19,14 +20,26 @@ namespace SoNSLib {
 	}
 
 	struct SoNSStepResult SoNS::Step(double time, const vector<SoNSRobot>& perceivedNeighbors, const vector<struct SoNSMessage>& receivedMessages) {
-		cout << "----------- I am " << myId << " Quality " << m_Data.sonsQuality << " ----------------------------" << endl; // 打印解析出的double值
+		std::ostringstream logMessage; // 使用ostringstream
+		logMessage << "----------- I am " << myId << " Quality " << m_Data.sonsQuality << " ----------------------------" << endl; // 记录信息
+
 		// 处理接收到的消息
+		CVector3 vTotal = CVector3();
+		int n = 0;
+
 		for (const auto& message : receivedMessages) {
-			double parsedValue = m_Messager.parseDouble(message.binary, 0); // 假设从索引0开始解析
-			cout << "    Parsed double from received message: " << message.id << ", " << parsedValue << endl; // 打印解析出的double值
+			int index = 0;
+			double quality = m_Messager.parseDouble(message.binary, index); // 假设从索引0开始解析
+			string itsId = m_Messager.parseString(message.binary, index);
+			CVector3 velocity = m_Messager.parseCVector3(message.binary, index); // 假设从索引0开始解析
+			logMessage << "    Parsed double from received message: " << message.id << ", id in message = " << itsId << " , " << quality << " velocity " << velocity << endl; // 记录信息
+
+			vTotal += velocity;
+			n++;
 		}
 
-		CVector3 vTotal = CVector3();
+		if (n != 0) vTotal = vTotal * (1.0/n);
+
 		double targetDistance = 3;
 
 		for (const SoNSRobot& robot : perceivedNeighbors) {
@@ -37,13 +50,22 @@ namespace SoNSLib {
 			}
 		}
 
-
 		struct SoNSMessage msg;
 		msg.id = SoNSBroadCastString;
-		msg.binary = m_Messager.bindDouble(m_Data.sonsQuality);
+		m_Messager.pushDouble(msg.binary, m_Data.sonsQuality);
+		m_Messager.pushString(msg.binary, myId);
+		m_Messager.pushCVector3(msg.binary, vTotal);
+
 		struct SoNSStepResult res;
 		res.outputVelocity = vTotal;
 		res.messages.push_back(msg);
+		res.logMessage = logMessage.str(); // 将ostringstream转换为string
+
+		for (const SoNSRobot& robot : perceivedNeighbors) {
+			res.drawArrows.emplace_back(SoNSArrow::Color::RED, robot.GetPosition());
+		}
+		res.drawArrows.emplace_back(SoNSArrow::Color::BLUE, vTotal);
+
 		return res;
 	}
 }

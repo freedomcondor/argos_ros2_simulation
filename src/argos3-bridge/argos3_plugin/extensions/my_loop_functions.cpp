@@ -12,7 +12,7 @@ namespace argos {
       }
       m_LoopFunctionRos2NodeHandle = std::make_shared<rclcpp::Node>("argos_loop_function_node");
       m_debugActuatorSubscriber = m_LoopFunctionRos2NodeHandle->create_subscription<geometry_msgs::msg::Pose>(
-         "drawArrows", 10, 
+         "/drawArrows", 1000,
          std::bind(&CMyLoopFunctions::debugActuatorCallback, this, std::placeholders::_1)
       );
 
@@ -29,14 +29,15 @@ namespace argos {
    /****************************************/
 
    void CMyLoopFunctions::PreStep() {
-      rclcpp::spin_some(m_LoopFunctionRos2NodeHandle); // 处理回调
+      m_pDebugEntity->GetArrows().clear();
    }
 
    /****************************************/
    /****************************************/
 
    void CMyLoopFunctions::PostStep() {
-
+      for (int i = 0; i < 1000; i++)
+         rclcpp::spin_some(m_LoopFunctionRos2NodeHandle);
    }
 
    /****************************************/
@@ -50,10 +51,28 @@ namespace argos {
    /****************************************/
 
    void CMyLoopFunctions::debugActuatorCallback(const geometry_msgs::msg::Pose::SharedPtr pose) {
-      // 处理接收到的 pose 消息
-      RCLCPP_INFO(m_LoopFunctionRos2NodeHandle->get_logger(), "Received Pose: Position(%f, %f, %f), Orientation(%f, %f, %f, %f)",
-                  pose->position.x, pose->position.y, pose->position.z,
-                  pose->orientation.x, pose->orientation.y, pose->orientation.z, pose->orientation.w);
+      CVector3 from = CVector3(
+         pose->position.x,
+         pose->position.y,
+         pose->position.z
+      );
+      CVector3 to = CVector3(
+         pose->orientation.x,
+         pose->orientation.y,
+         pose->orientation.z
+      );
+
+      CColor color;
+      switch ((int)pose->orientation.w) {
+         case 0:  color = CColor::RED;    break;
+         case 1:  color = CColor::GREEN;  break;
+         case 2:  color = CColor::BLUE;   break;
+         case 3:  color = CColor::YELLOW; break;
+         case 4:  color = CColor::BLACK;  break;
+         default: color = CColor::WHITE; break;
+      }
+
+      m_pDebugEntity->GetArrows().emplace_back(from, to, color);
    }
 
    /****************************************/
