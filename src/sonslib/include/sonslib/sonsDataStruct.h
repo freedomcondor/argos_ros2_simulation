@@ -8,30 +8,44 @@ using namespace swarmMathLib;
 #include <vector>
 using std::vector;
 
+#include <map>
+using std::map;
+
 #include <string>
 using std::string;
 
 namespace SoNSLib {
 	#define SoNSBroadCastString "BROADCAST"
 
-	class SoNSRobot {
+	struct SoNSParameters {
+		double heartbeatTime = 3;
+	};
+
+	struct SoNSRobot {
 	public:
 		string id;
 		string type;
+		double heartbeat;
 		CTransform transform;
 		CVector3 GetPosition() const {return transform.m_Position;}
 		CQuaternion GetOrientation() const {return transform.m_Orientation;}
+		SoNSRobot() {}
 		SoNSRobot(string _id, string _type, const CTransform& _transform):id(_id), type(_type), transform(_transform) {}
 	};
 
-	class SoNSData {
+	struct SoNSData {
 	public:
+		string myId;
+		string myType;
+
 		string sonsId;
 		double sonsQuality;
 
-		std::vector<SoNSRobot> neighbors;
+		map<string, SoNSRobot> neighbors;
 		SoNSRobot* parent;
-		std::vector<SoNSRobot*> children;
+		map<string, SoNSRobot*> children;
+
+		SoNSParameters parameters;
 
 		// TODO
 		// depth
@@ -54,7 +68,7 @@ namespace SoNSLib {
 		CVector3 outputVelocity;
 		vector<struct SoNSMessage> messages;
 		vector<struct SoNSArrow> drawArrows;
-		string logMessage;
+		string log;
 	};
 
 }

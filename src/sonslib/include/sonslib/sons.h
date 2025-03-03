@@ -12,18 +12,21 @@ using namespace swarmMathLib;
 
 #include "sonsDataStruct.h"
 #include "messager.h"
+#include "connector.h"
 
 namespace SoNSLib {
 	class SoNS {
 		public:
 			SoNS();
 			void SetId(string _myId, string _myType);
-			struct SoNSData m_Data;
 			struct SoNSStepResult Step(double time, const vector<SoNSRobot>& perceivedNeighbors, const vector<struct SoNSMessage>& receivedMessages);
 		private:
+			struct SoNSData m_Data;
 			SoNSMessager m_Messager;
-			string myId;
-			string myType;
+
+			void UpdateNeighbors(const vector<SoNSRobot>& perceivedNeighbors, double time);
+
+			SoNSConnector connector;
 	};
 }
 

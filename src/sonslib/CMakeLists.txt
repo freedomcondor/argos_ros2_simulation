@@ -11,7 +11,10 @@ find_package(mathlib REQUIRED)
 
 include_directories(include/sonslib)
 
-add_library(${PROJECT_NAME} src/sons.cpp)
+add_library(${PROJECT_NAME}
+  src/sons.cpp
+  src/connector.cpp
+)
 
 ament_target_dependencies(${PROJECT_NAME}
   mathlib

@@ -58,7 +58,7 @@ public:
 		m_PoseSharingPublisher =
 			this->create_publisher<drone::msg::PoseSharing>("/poseSharing", 10);
 
-		this->declare_parameter("distance_threshold", 5.0);
+		this->declare_parameter("distance_threshold", 10.0);
 		this->declare_parameter("target_distance", 3.0);
 
 		m_PoseSharingSubscriber = this->create_subscription<drone::msg::PoseSharing>("/poseSharing", 10,
@@ -112,7 +112,7 @@ public:
 		m_receivedMessages.clear();
 
 		// Log the message from SoNS
-		RCLCPP_INFO(this->get_logger(), "%s", result.logMessage.c_str());
+		RCLCPP_INFO(this->get_logger(), "%s", result.log.c_str());
 
 		// enforce output velocity
 		setVelocity(result.outputVelocity);
