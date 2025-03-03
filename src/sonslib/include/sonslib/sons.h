@@ -22,7 +22,6 @@ namespace SoNSLib {
 			struct SoNSStepResult Step(double time, const vector<SoNSRobot>& perceivedNeighbors, const vector<struct SoNSMessage>& receivedMessages);
 		private:
 			struct SoNSData m_Data;
-			SoNSMessager m_Messager;
 
 			void UpdateNeighbors(const vector<SoNSRobot>& perceivedNeighbors, double time);
 

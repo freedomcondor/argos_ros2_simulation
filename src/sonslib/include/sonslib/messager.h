@@ -14,12 +14,12 @@ namespace SoNSLib {
 	class SoNSMessager {
 	public:
 		// double --------------------------------------------------------------
-		inline void pushDouble(vector<uint8_t>& _binary, double _d) {
+		inline static void pushDouble(vector<uint8_t>& _binary, double _d) {
 			vector<uint8_t> res(reinterpret_cast<uint8_t*>(&_d), reinterpret_cast<uint8_t*>(&_d) + sizeof(double));
 			_binary.insert(_binary.end(), res.begin(), res.end());
 		}
 
-		inline double parseDouble(const vector<uint8_t>& _binary, int& i) const {
+		inline static double parseDouble(const vector<uint8_t>& _binary, int& i) {
 			double result;
 			if (i + sizeof(double) <= _binary.size()) {
 				std::memcpy(&result, _binary.data() + i, sizeof(double));
@@ -31,13 +31,13 @@ namespace SoNSLib {
 		}
 
 		// CVector3 --------------------------------------------------------------
-		inline void pushCVector3(vector<uint8_t>& _binary, const CVector3& _v) {
+		inline static void pushCVector3(vector<uint8_t>& _binary, const CVector3& _v) {
 			pushDouble(_binary, _v.GetX());
 			pushDouble(_binary, _v.GetY());
 			pushDouble(_binary, _v.GetZ());
 		}
 
-		inline CVector3 parseCVector3(const vector<uint8_t>& _binary, int& i) const {
+		inline static CVector3 parseCVector3(const vector<uint8_t>& _binary, int& i) {
 			double X = parseDouble(_binary, i);
 			double Y = parseDouble(_binary, i);
 			double Z = parseDouble(_binary, i);
@@ -45,13 +45,13 @@ namespace SoNSLib {
 		}
 
 		// String --------------------------------------------------------------
-		void pushString(vector<uint8_t>& binary, const string& str) {
+		void static pushString(vector<uint8_t>& binary, const string& str) {
 			size_t length = str.length();
 			binary.push_back(static_cast<uint8_t>(length)); // 假设长度不超过255
 			binary.insert(binary.end(), str.begin(), str.end());
 		}
 
-		string parseString(const vector<uint8_t>& binary, int& index) {
+		string static parseString(const vector<uint8_t>& binary, int& index) {
 			size_t length = static_cast<size_t>(binary[index++]); // 假设长度不超过255
 			string result(binary.begin() + index, binary.begin() + index + length);
 			index += length; // 更新索引

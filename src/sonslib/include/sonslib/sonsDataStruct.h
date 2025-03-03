@@ -17,8 +17,10 @@ using std::string;
 namespace SoNSLib {
 	#define SoNSBroadCastString "BROADCAST"
 
+	//- structs ---------------------------------------------------------------------------------------------
 	struct SoNSParameters {
 		double heartbeatTime = 3;
+		double recruitWaitingTime = 1;
 	};
 
 	struct SoNSRobot {
@@ -33,6 +35,19 @@ namespace SoNSLib {
 		SoNSRobot(string _id, string _type, const CTransform& _transform):id(_id), type(_type), transform(_transform) {}
 	};
 
+	struct SoNSMessage {
+		string id;
+		vector<uint8_t> binary;
+	};
+
+	struct SoNSArrow{
+		enum Color { RED, GREEN, BLUE, YELLOW, BLACK, WHITE };
+		Color color;
+		CVector3 arrow;
+		SoNSArrow(Color _color, const CVector3& _arrow):color(_color),arrow(_arrow) {}
+	};
+
+	//- SoNS data -------------------------------------------------------------------------------------------
 	struct SoNSData {
 	public:
 		string myId;
@@ -47,27 +62,18 @@ namespace SoNSLib {
 
 		SoNSParameters parameters;
 
+		map<string, SoNSMessage> messagesToSend;
+		map<string, SoNSMessage> messagesReceived;
+
 		// TODO
 		// depth
 		// scale
 	};
 
-	struct SoNSMessage {
-		string id;
-		vector<uint8_t> binary;
-	};
-
-	struct SoNSArrow{
-		enum Color { RED, GREEN, BLUE, YELLOW, BLACK, WHITE };
-		Color color;
-		CVector3 arrow;
-		SoNSArrow(Color _color, const CVector3& _arrow):color(_color),arrow(_arrow) {}
-	};
-
 	struct SoNSStepResult {
 		CVector3 outputVelocity;
-		vector<struct SoNSMessage> messages;
-		vector<struct SoNSArrow> drawArrows;
+		vector<SoNSMessage> messages;
+		vector<SoNSArrow> drawArrows;
 		string log;
 	};
 
