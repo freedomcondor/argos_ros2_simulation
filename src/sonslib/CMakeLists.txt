@@ -14,6 +14,7 @@ include_directories(include/sonslib)
 add_library(${PROJECT_NAME}
   src/sons.cpp
   src/connector.cpp
+  src/messager.cpp
 )
 
 ament_target_dependencies(${PROJECT_NAME}

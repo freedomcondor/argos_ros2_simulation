@@ -18,14 +18,18 @@ namespace SoNSLib {
 	class SoNS {
 		public:
 			SoNS();
-			void SetId(string _myId, string _myType);
-			struct SoNSStepResult Step(double time, const vector<SoNSRobot>& perceivedNeighbors, const vector<struct SoNSMessage>& receivedMessages);
+			void Initialize(string _myId, string _myType);
+			struct SoNSStepResult Step(
+				double time,
+				const vector<SoNSRobot>& perceivedNeighbors,
+				const vector<struct SoNSMessage>& receivedMessages
+			);
 		private:
 			struct SoNSData m_Data;
 
 			void UpdateNeighbors(const vector<SoNSRobot>& perceivedNeighbors, double time);
 
-			SoNSConnector connector;
+			SoNSConnector sonsConnector;
 	};
 }
 

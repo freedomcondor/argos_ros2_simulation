@@ -13,6 +13,7 @@ namespace SoNSLib {
 			SoNSRobot* pRobot;
 		};
 
+		void Initialize(SoNSData& sonsData);
 		void Step(SoNSData& sonsData, double time, std::ostringstream& log);
 
 	private:
@@ -22,7 +23,8 @@ namespace SoNSLib {
 		void Recruit(SoNSData& sonsData, string id);
 
 		//------------------------------------------------------
-		void pushRecruitMessage(vector<uint8_t>& _binary);
+		vector<uint8_t> generateRecruitMessage(string sons_id, double sons_quality);
+		void parseRecruitMessage(const vector<uint8_t>& _binary, uint& i, string& _his_id, double& _his_quality);
 	};
 }
 

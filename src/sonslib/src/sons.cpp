@@ -1,7 +1,6 @@
 #include "sons.h"
 
 #include <iostream>
-#include <random>
 #include <sstream>
 using std::cout;
 using std::endl;
@@ -14,36 +13,54 @@ namespace SoNSLib {
 
 	}
 
-	void SoNS::SetId(string _myId, string _myType) {
+	void SoNS::Initialize(string _myId, string _myType) {
 		m_Data.myId = _myId;
 		m_Data.myType = _myType;
 
-		// 随机数生成器
-		std::random_device rd; // 获取随机数种子
-		std::mt19937 gen(rd()); // 使用梅森旋转算法生成随机数
-		std::uniform_real_distribution<> dis(0.0, 1.0); // 定义范围为0到1的均匀分布
-
-		m_Data.sonsQuality = dis(gen); // 生成随机数并赋值给sonsQuality
+		sonsConnector.Initialize(m_Data);
 	}
 
-	struct SoNSStepResult SoNS::Step(double time, const vector<SoNSRobot>& perceivedNeighbors, const vector<struct SoNSMessage>& receivedMessages) {
-		m_Data.messagesToSend.clear();
-
+	struct SoNSStepResult SoNS::Step(
+		double time,
+		const vector<SoNSRobot>& perceivedNeighbors,
+		const vector<struct SoNSMessage>& receivedMessages
+	) {
 		std::ostringstream log; // 使用ostringstream
-		log << "----------- I am " << m_Data.myId << " ------------------------------------" << endl; // 记录信息
+		log << endl;
+		log << "----------- I am " << m_Data.myId << ", I belong to " << m_Data.sonsId << ", My quality is " << m_Data.sonsQuality << "------------------------------------" << endl; // 记录信息
 
+		//- debug print raw messages ---------------------------------------------
 		for (const auto& message : receivedMessages) {
-			int index = 0;
-			log << "Received message: " << message.id << " " << SoNSMessager::parseString(message.binary, index) << endl; // 打印接收到的消息内容
+			log << "Message binary in hex: ";
+			for (const uint8_t byte : message.binary) {
+				// Convert byte to hex string with leading zero if needed
+				log << std::hex << std::uppercase;
+				if (static_cast<int>(byte) < 16) log << "0";
+				log << static_cast<int>(byte) << " ";
+			}
+			log << std::dec << endl;
+
+			uint index = 1; // 0xCC header
+			log << "Received message from : " << message.id << " "
+				<< CMessager::parseCommandType(message.binary, index) << " "
+				<< CMessager::parseUint16(message.binary, index) << " "
+				<< CMessager::parseString(message.binary, index) << " "
+				<< CMessager::parseDouble(message.binary, index) << " "
+				<< endl;
 		}
 
+		//-------------------------------------------------------------------
+		m_Data.sonsMessager.clearMessages();
+		m_Data.sonsMessager.OrganizeReceivedCommands(receivedMessages);
+
 		UpdateNeighbors(perceivedNeighbors, time);
-		connector.Step(m_Data, time, log);
+		sonsConnector.Step(m_Data, time, log);
 
 		// -----------------------------------------------------------
 		struct SoNSStepResult res;
 		res.outputVelocity = CVector3();
-		for (auto& pair : m_Data.messagesToSend) res.messages.push_back(pair.second);
+		map<string, vector<uint8_t>> messageMap = m_Data.sonsMessager.combineCommands();
+		for (auto& pair : messageMap) res.messages.push_back({pair.first, pair.second});
 		res.log = log.str(); // 将ostringstream转换为string
 
 		//res.drawArrows.emplace_back(SoNSArrow::Color::BLUE, vTotal);

@@ -32,7 +32,7 @@ public:
 			m_strMyID = m_strMyID.substr(1); // Remove leading '/'
 		}
 
-		sons.SetId(m_strMyID, "drone");
+		sons.Initialize(m_strMyID, "drone");
 
 		m_VelocityActuatorPublisher =
 			this->create_publisher<geometry_msgs::msg::Pose>("droneVelocityActuator", 10);

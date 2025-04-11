@@ -5,6 +5,8 @@
 #include "mathlib/math/transform.h"
 using namespace swarmMathLib;
 
+#include "messager.h"
+
 #include <vector>
 using std::vector;
 
@@ -32,7 +34,8 @@ namespace SoNSLib {
 		CVector3 GetPosition() const {return transform.m_Position;}
 		CQuaternion GetOrientation() const {return transform.m_Orientation;}
 		SoNSRobot() {}
-		SoNSRobot(string _id, string _type, const CTransform& _transform):id(_id), type(_type), transform(_transform) {}
+		SoNSRobot(string _id, string _type, const CTransform& _transform):
+			id(_id), type(_type), transform(_transform) {}
 	};
 
 	struct SoNSMessage {
@@ -62,12 +65,12 @@ namespace SoNSLib {
 
 		SoNSParameters parameters;
 
-		map<string, SoNSMessage> messagesToSend;
-		map<string, SoNSMessage> messagesReceived;
+		CMessager sonsMessager;
 
 		// TODO
 		// depth
 		// scale
+		map<CMessager::CommandType, vector<CMessager::Command>>& GetReceivedCommands() {return sonsMessager.GetReceivedCommands();}
 	};
 
 	struct SoNSStepResult {
