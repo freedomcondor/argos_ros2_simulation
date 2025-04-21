@@ -112,7 +112,7 @@ public:
 		m_receivedMessages.clear();
 
 		// Log the message from SoNS
-		RCLCPP_INFO(this->get_logger(), "%s", result.log.c_str());
+		//RCLCPP_INFO(this->get_logger(), "%s", result.log.c_str());
 
 		// enforce output velocity
 		setVelocity(result.outputVelocity);

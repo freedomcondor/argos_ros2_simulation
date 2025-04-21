@@ -15,7 +15,7 @@ using std::map;
 namespace SoNSLib {
 
 	SoNS::SoNS() : sonsConnector(*this) {
-		RegisterModule(std::make_shared<SoNSConnector>(sonsConnector));
+		RegisterModule(std::shared_ptr<SoNSConnector>(&sonsConnector, [](SoNSConnector*){}));
 	}
 
 	void SoNS::Init(string _myId, string _myType) {
@@ -53,9 +53,21 @@ namespace SoNSLib {
 		}
 	}
 
+	void SoNS::Recruit(string _id) {
+		for (auto& module : modules_) {
+			module->Recruit(_id);
+		}
+	}
+
 	void SoNS::Remove(string _id) {
 		for (auto& module : modules_) {
 			module->Remove(_id);
+		}
+	}
+
+	void SoNS::RemoveWithUpdate(string _id) {
+		for (auto& module : modules_) {
+			module->RemoveWithUpdate(_id);
 		}
 	}
 
@@ -64,11 +76,54 @@ namespace SoNSLib {
 		const vector<SoNSRobot>& perceivedNeighbors,
 		const vector<struct SoNSMessage>& receivedMessages
 	) {
+		std::ostringstream log;
+		std::cout << "----------- I am " << myId_str_ << ", I belong to " << sonsId_str_ << ", My quality is " << sonsQuality_f_ << "------------------------------------" << endl; // 记录信息
+
+		//- debug print raw messages ---------------------------------------------
+		for (const auto& message : receivedMessages) {
+			std::cout << "Message binary in hex: ";
+			for (const uint8_t byte : message.binary) {
+				// Convert byte to hex string with leading zero if needed
+				std::cout << std::hex << std::uppercase;
+				if (static_cast<int>(byte) < 16) std::cout << "0";
+				std::cout << static_cast<int>(byte) << " ";
+			}
+			std::cout << std::dec << endl;
+
+			uint index = 1; // 0xCC header
+			std::cout << "Received message from : " << message.id << " "
+				<< CMessager::parseCommandType(message.binary, index) << " "
+				<< CMessager::parseUint16(message.binary, index) << " "
+				//<< CMessager::parseString(message.binary, index) << " "
+				//<< CMessager::parseDouble(message.binary, index) << " "
+				<< endl;
+		}
+		std::cout << "neighbours : ----------------------" << endl;
+		for (auto& pair : neighbors_mapRobot_) {
+			std::cout << pair.first << "\t ";
+		}
+		std::cout << endl;
+		std::cout << "parent : ----------------------" << endl;
+		if (parent_RobotP_ != nullptr) std::cout << parent_RobotP_->id;
+		std::cout << endl;
+		std::cout << "children : ----------------------" << endl;
+		for (auto& pair : children_mapRobotP_) {
+			std::cout << pair.first << "\t ";
+		}
+		std::cout << endl;
+		std::cout << "waiting list: ----------------------" << endl;
+		for (auto& pair : sonsConnector.m_WaitingList) {
+			std::cout << pair.first << "\t " << pair.second.waitingTimeCountDown;
+		}
+		std::cout << endl;
+
+
+		//--------------------------------------------------------------
+
 		messager_.clearMessages();
 		messager_.OrganizeReceivedCommands(receivedMessages);
 		UpdateNeighbors(perceivedNeighbors, time);
 
-		std::ostringstream log;
 		sonsConnector.Step(time, log);
 		/*
 		for (auto& module : modules_) {
@@ -76,8 +131,16 @@ namespace SoNSLib {
 		}
 		*/
 		SoNSStepResult result;
+		map<string, vector<uint8_t>> messageMap = messager_.combineCommands();
+		for (auto& pair : messageMap) result.messages.push_back({pair.first, pair.second});
+		result.log = log.str(); // 将ostringstream转换为string
+		/*
 		for (const auto& neighbour : neighbors_mapRobot_) {
 			result.drawArrows.emplace_back(SoNSArrow::Color::BLUE, neighbour.second.GetPosition());
+		}
+		*/
+		for (const auto& neighbour : children_mapRobotP_) {
+			result.drawArrows.emplace_back(SoNSArrow::Color::RED, neighbour.second->GetPosition());
 		}
 		return result;
 	}
@@ -104,7 +167,7 @@ namespace SoNSLib {
 			if (it->second.seenCD < 0) {
 				if (ExistsInChildren(it->first) || ExistsInParent(it->first))
 					messager_.sendCommand(it->first, CMessager::CommandType::BREAK, {});
-				Remove(it->first);
+				RemoveWithUpdate(it->first);
 				it = neighbors_mapRobot_.erase(it);
 			}
 			else {

@@ -33,7 +33,7 @@ namespace SoNSLib {
 		for (const auto& message : receivedMessages) {
 			log << "Message binary in hex: ";
 			for (const uint8_t byte : message.binary) {
-				// Convert byte to hex string with leading zero if needed
+
 				log << std::hex << std::uppercase;
 				if (static_cast<int>(byte) < 16) log << "0";
 				log << static_cast<int>(byte) << " ";

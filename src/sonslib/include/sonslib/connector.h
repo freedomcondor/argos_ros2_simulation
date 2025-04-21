@@ -19,17 +19,20 @@ namespace SoNSLib {
 	public:
 		SoNSConnector(SoNS& sons) : SoNSModule(sons) {};
 		void Init() override;
-		//void UpdateSoNSID(SoNSData& sonsData);
+		void UpdateSoNSID();
 		void Step(double time, std::ostringstream& log);
 
-		//void Recruit(SoNSData& sonsData, string id);
-		//void Remove(SoNSData& sonsData, string id);
+		void Recruit(string id) override;
+		void Remove(string id) override;
+		void RemoveWithUpdate(string id) override;
 
-	private:
+	//private:
+	public:
 		struct WaitingSoNSRobot {
 			double waitingTimeCountDown;
 			SoNSRobot* pRobot;
 		};
+		double lockCD = -1;
 		map<string, WaitingSoNSRobot> m_WaitingList;
 		void UpdateWaitingList(double time);
 		//------------------------------------------------------

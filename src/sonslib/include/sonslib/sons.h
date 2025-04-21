@@ -72,13 +72,12 @@ namespace SoNSLib {
 				const vector<SoNSRobot>& perceivedNeighbors,
 				const vector<struct SoNSMessage>& receivedMessages
 			);
+			void Recruit(string _id);
 			void Remove(string _id);
+			void RemoveWithUpdate(string _id);
 
 		private:
 			void UpdateNeighbors(const vector<SoNSRobot>& perceivedNeighbors, double time);
-			bool ExistsInNeighbors(string _id) {return neighbors_mapRobot_.find(_id) != neighbors_mapRobot_.end();}
-			bool ExistsInChildren(string _id) {return children_mapRobotP_.find(_id) != children_mapRobotP_.end();}
-			bool ExistsInParent(string _id) {return parent_RobotP_ != nullptr && parent_RobotP_->id == _id;}
 
 		// sons data
 		public:
@@ -92,10 +91,14 @@ namespace SoNSLib {
 			map<string, SoNSRobot> neighbors_mapRobot_;
 			SoNSRobot* parent_RobotP_;
 			map<string, SoNSRobot*> children_mapRobotP_;
+			bool ExistsInNeighbors(string _id) {return neighbors_mapRobot_.find(_id) != neighbors_mapRobot_.end();}
+			bool ExistsInChildren(string _id) {return children_mapRobotP_.find(_id) != children_mapRobotP_.end();}
+			bool ExistsInParent(string _id) {return parent_RobotP_ != nullptr && parent_RobotP_->id == _id;}
 
 			// utils
 			SoNSParameters parameters_;
 			CMessager messager_;
+			map<CMessager::CommandType, vector<CMessager::Command>>& GetReceivedCommands() {return messager_.GetReceivedCommands();}
 
 			// modules
 			SoNSConnector sonsConnector;

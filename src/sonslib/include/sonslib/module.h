@@ -12,7 +12,9 @@ namespace SoNSLib {
 		virtual void PreStep() {}
 		virtual void Step() {}
 		virtual void PostStep() {}
+		virtual void Recruit(string _id) {}
 		virtual void Remove(string _id) {}
+		virtual void RemoveWithUpdate(string _id) {}
 
 	protected:
 		SoNS* sons_;
