@@ -26,8 +26,10 @@ namespace SoNSLib {
 		#define MessageHeader 0xCC
 
 		enum CommandType {
-			ACKNOWLEDGEMENT,
 			RECRUIT,
+			ACKNOWLEDGEMENT,
+			UPDATE,
+			BREAK,
 		};
 
 		struct Command {

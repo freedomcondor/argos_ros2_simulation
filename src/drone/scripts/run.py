@@ -29,7 +29,7 @@ def generate_drone_launch_xml(drone_name) :
 	<group> <push-ros-namespace namespace="{}" />
 		<!--node pkg="drone" exec="droneFlightSystem" output="screen" /-->
 		<!--node pkg="drone" exec="droneSwarmSystem" output="screen" /-->
-		<node pkg="drone" exec="droneSwarmSystem" output="log"/>
+		<node pkg="drone" exec="droneSwarmSystem" output="screen"/>
 	</group>
 	'''.format(drone_name)
 	return txt
@@ -47,7 +47,7 @@ def generate_drone_argos_xml(drone_name, x, y, z, th) :
 
 #----------------------------------------------------------------------------
 #----------------------------------------------------------------------------
-N = 2
+N = 5
 
 drones_launch_xml = ""
 for i in range(1, N+1):

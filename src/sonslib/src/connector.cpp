@@ -19,6 +19,11 @@ namespace SoNSLib {
 
 	void SoNSConnector::Step(SoNSData& sonsData, double time, std::ostringstream& log) {
 		UpdateWaitingList(time);
+		// check break
+		for (const auto& command : sonsData.GetReceivedCommands()[CMessager::CommandType::BREAK]) {
+			string fromId = command.id;
+			Remove(sonsData, fromId);
+		}
 
 		// check ack
 		for (const auto& command : sonsData.GetReceivedCommands()[CMessager::CommandType::ACKNOWLEDGEMENT]) {
@@ -42,19 +47,29 @@ namespace SoNSLib {
 			    (his_sonsId != sonsData.sonsId) &&
 			    (his_sonsQuality > sonsData.sonsQuality)
 			   ) {
+				// remove in wait list
+				if (m_WaitingList.find(fromId) != m_WaitingList.end()) {m_WaitingList.erase(fromId);};
+				// if already has parent
+				if (sonsData.parent != nullptr) {
+					sonsData.sonsMessager.sendCommand(sonsData.parent->id, CMessager::CommandType::BREAK, {});
+					Remove(sonsData, sonsData.parent->id);
+				}
 				sonsData.parent = &sonsData.neighbors[fromId];
 				sonsData.sonsMessager.sendCommand(
 					fromId,
 					CMessager::CommandType::ACKNOWLEDGEMENT, {}
 				);
+				sonsData.sonsId = his_sonsId;
+				sonsData.sonsQuality = his_sonsQuality;
+				UpdateSoNSID(sonsData);
 			}
 		}
 
 		// recruit all
 		for (auto& pair : sonsData.neighbors) {
 			if ((m_WaitingList.find(pair.first) == m_WaitingList.end()) &&
-			    (sonsData.children.find(pair.first) == sonsData.children.end()) &&
-			    (sonsData.parent == nullptr || sonsData.parent->id != pair.first)
+			    (!sonsData.ExistsInChildren(pair.first)) &&
+			    (!sonsData.ExistsInParent(pair.first))
 			   ){
 				// Recruit the robot
 				Recruit(sonsData, pair.first);
@@ -90,6 +105,28 @@ namespace SoNSLib {
 				sonsData.sonsQuality
 			)
 		);
+	}
+
+	void SoNSConnector::Remove(SoNSData& sonsData, string _id) {
+		if (sonsData.ExistsInChildren(_id)) {sonsData.children.erase(_id);}
+		if (sonsData.ExistsInParent(_id)) {
+			sonsData.parent = nullptr;
+			Initialize(sonsData);
+			UpdateSoNSID(sonsData);
+		}
+	}
+
+	void SoNSConnector::UpdateSoNSID(SoNSData& sonsData) {
+		for (auto& pair : sonsData.children) {
+			sonsData.sonsMessager.sendCommand(
+				pair.first,
+				CMessager::CommandType::UPDATE,
+				generateRecruitMessage(
+					sonsData.sonsId,
+					sonsData.sonsQuality
+				)
+			);
+		}
 	}
 
 	//------------------------------------------------------

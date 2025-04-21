@@ -48,13 +48,28 @@ namespace SoNSLib {
 				<< CMessager::parseDouble(message.binary, index) << " "
 				<< endl;
 		}
+		log << "neighbours : ----------------------" << endl;
+		for (auto& pair : m_Data.neighbors) {
+			log << pair.first << "\t ";
+		}
+		log << endl;
+		log << "parent : ----------------------" << endl;
+		if (m_Data.parent != nullptr) log << m_Data.parent->id;
+		log << endl;
+		log << "children : ----------------------" << endl;
+		for (auto& pair : m_Data.children) {
+			log << pair.first << "\t ";
+		}
+		log << endl;
 
 		//-------------------------------------------------------------------
 		m_Data.sonsMessager.clearMessages();
 		m_Data.sonsMessager.OrganizeReceivedCommands(receivedMessages);
 
 		UpdateNeighbors(perceivedNeighbors, time);
+		log << "after UpdateNeighbors" << endl;
 		sonsConnector.Step(m_Data, time, log);
+		log << "after connector step" << endl;
 
 		// -----------------------------------------------------------
 		struct SoNSStepResult res;
@@ -63,7 +78,9 @@ namespace SoNSLib {
 		for (auto& pair : messageMap) res.messages.push_back({pair.first, pair.second});
 		res.log = log.str(); // 将ostringstream转换为string
 
-		//res.drawArrows.emplace_back(SoNSArrow::Color::BLUE, vTotal);
+		for (auto& pair : m_Data.children) {
+			res.drawArrows.emplace_back(SoNSArrow::Color::BLUE, pair.second->GetPosition());
+		}
 
 		return res;
 	}
@@ -72,19 +89,25 @@ namespace SoNSLib {
 		for (const SoNSRobot& robot : perceivedNeighbors) {
 			if (m_Data.neighbors.find(robot.id) == m_Data.neighbors.end()) {
 				m_Data.neighbors[robot.id] = robot; // If it doesn't exist, add the robot
+				m_Data.neighbors[robot.id].transform = robot.transform;
 				m_Data.neighbors[robot.id].heartbeat = m_Data.parameters.heartbeatTime;
 			}
 			else {
-				m_Data.neighbors[robot.id].transform = robot.transform; // Update the transform of the existing robot
+				m_Data.neighbors[robot.id].transform = robot.transform;
 				m_Data.neighbors[robot.id].heartbeat = m_Data.parameters.heartbeatTime;
 			}
 		}
 
-		for (auto& pair : m_Data.neighbors) {
-			pair.second.heartbeat -= time; // Decrease the heartbeat by the elapsed time
-			if (pair.second.heartbeat < 0) {
-				// TODO
-				//connector.remove();
+		for (auto it = m_Data.neighbors.begin(); it != m_Data.neighbors.end();) {
+			it->second.heartbeat -= time; // Decrease the heartbeat by the elapsed time
+			if (it->second.heartbeat < 0) {
+				if (m_Data.ExistsInChildren(it->first) || m_Data.ExistsInParent(it->first))
+					m_Data.sonsMessager.sendCommand(it->first, CMessager::CommandType::BREAK, {});
+				sonsConnector.Remove(m_Data, it->first);
+				it = m_Data.neighbors.erase(it);
+			}
+			else {
+				it++;
 			}
 		}
 	}

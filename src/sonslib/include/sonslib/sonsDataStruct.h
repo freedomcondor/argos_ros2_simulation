@@ -71,6 +71,8 @@ namespace SoNSLib {
 		// depth
 		// scale
 		map<CMessager::CommandType, vector<CMessager::Command>>& GetReceivedCommands() {return sonsMessager.GetReceivedCommands();}
+		bool ExistsInChildren(string _id) {return children.find(_id) != children.end();}
+		bool ExistsInParent(string _id) {return parent != nullptr && parent->id == _id;}
 	};
 
 	struct SoNSStepResult {
