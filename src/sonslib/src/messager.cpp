@@ -43,6 +43,8 @@ namespace SoNSLib {
 				return "UPDATE";
 			case CommandType::BREAK:
 				return "BREAK";
+			case CommandType::HEARTBEAT:
+				return "HEARTBEAT";
 			default:
 				return "UNKNOWN";
 		}
@@ -63,16 +65,14 @@ namespace SoNSLib {
 					cmdlog << parseString(cmd, contentI) << " "
 					       << parseDouble(cmd, contentI);
 					break;
-				case CommandType::ACKNOWLEDGEMENT:
-					break;
 				case CommandType::UPDATE:
 					cmdlog << parseString(cmd, contentI) << " "
 					       << parseDouble(cmd, contentI);
 					break;
-				case CommandType::BREAK:
-					break;
-				default:
-					break;
+				case CommandType::ACKNOWLEDGEMENT: break;
+				case CommandType::BREAK:           break;
+				case CommandType::HEARTBEAT:       break;
+				default:  break;
 			}
 
 			cmdlog << std::endl;

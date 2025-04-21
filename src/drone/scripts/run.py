@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 launch_template = "src/drone/launch/drone_launch_template.xml"
 launch_target = "install/drone/share/drone/launch/drone_launch.xml"
 

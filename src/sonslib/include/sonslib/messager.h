@@ -31,6 +31,7 @@ namespace SoNSLib {
 			ACKNOWLEDGEMENT,
 			UPDATE,
 			BREAK,
+			HEARTBEAT,
 		};
 
 		struct Command {

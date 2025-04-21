@@ -106,10 +106,10 @@ namespace SoNSLib {
 
 		log_ << "--- step result --------" << endl;
 		log_ << "\tparent : --------" << endl;
-		if (parent_RobotP_ != nullptr) log_ << "\t\t" << parent_RobotP_->id << endl;
+		if (parent_RobotP_ != nullptr) log_ << "\t\t" << parent_RobotP_->id << " " << parent_RobotP_->heartbeatCD << endl;
 		log_ << "\tchildren : ----------------------" << endl;
 		for (auto& pair : children_mapRobotP_) {
-			log_ << "\t\t" << pair.first << endl;
+			log_ << "\t\t" << pair.first << " " << pair.second->heartbeatCD << endl;
 		}
 		log_ << "\twaiting list: ----------------------" << endl;
 		for (auto& pair : sonsConnector.m_WaitingList) {

@@ -25,6 +25,46 @@ namespace SoNSLib {
 		if (lockCD > 0) lockCD -= time;
 		UpdateWaitingList(time);
 
+		// check heartbeat
+		for (const auto& command : sons_->GetReceivedCommands()[CMessager::CommandType::HEARTBEAT]) {
+			string fromId = command.id;
+			if (sons_->ExistsInParent(fromId)) {
+				sons_->parent_RobotP_->heartbeatCD = sons_->parameters_.heartbeatCDTime;
+			} else if (sons_->ExistsInChildren(fromId)) {
+				sons_->children_mapRobotP_[fromId]->heartbeatCD = sons_->parameters_.heartbeatCDTime;
+			}
+		}
+
+		// countdown heartbeat for parent
+		if (sons_->parent_RobotP_ != nullptr) {
+			sons_->parent_RobotP_->heartbeatCD -= time;
+			if (sons_->parent_RobotP_->heartbeatCD < 0) {
+				// Send BREAK message to parent
+				sons_->messager_.sendCommand(
+					sons_->parent_RobotP_->id,
+					CMessager::CommandType::BREAK,
+					{}
+				);
+				sons_->RemoveWithUpdate(sons_->parent_RobotP_->id);
+			}
+		}
+
+		// countdown heartbeat for children
+		for (auto it = sons_->children_mapRobotP_.begin(); it != sons_->children_mapRobotP_.end();) {
+			it->second->heartbeatCD -= time;
+			if (it->second->heartbeatCD < 0) {
+				// Send BREAK message to the child
+				sons_->messager_.sendCommand(
+					it->second->id,
+					CMessager::CommandType::BREAK,
+					{}
+				);
+				it = sons_->children_mapRobotP_.erase(it);
+			} else {
+				++it;
+			}
+		}
+
 		// check ack
 		for (const auto& command : sons_->GetReceivedCommands()[CMessager::CommandType::ACKNOWLEDGEMENT]) {
 			string fromId = command.id;
@@ -32,6 +72,7 @@ namespace SoNSLib {
 			    (m_WaitingList.find(fromId) != m_WaitingList.end())
 			   ) {
 				sons_->children_mapRobotP_[fromId] = &sons_->neighbors_mapRobot_[fromId];
+				sons_->children_mapRobotP_[fromId]->heartbeatCD = sons_->parameters_.heartbeatCDTime;
 				m_WaitingList.erase(fromId);
 			}
 		}
@@ -89,6 +130,7 @@ namespace SoNSLib {
 				sons_->Remove(sons_->parent_RobotP_->id);
 			}
 			sons_->parent_RobotP_ = &sons_->neighbors_mapRobot_[bestFromId];
+			sons_->parent_RobotP_->heartbeatCD = sons_->parameters_.heartbeatCDTime;
 			sons_->messager_.sendCommand(
 				bestFromId,
 				CMessager::CommandType::ACKNOWLEDGEMENT, {}
@@ -98,6 +140,21 @@ namespace SoNSLib {
 			UpdateSoNSID();
 		}
 
+		// Send heartbeat to parent and all children
+		if (sons_->parent_RobotP_ != nullptr) {
+			sons_->messager_.sendCommand(
+				sons_->parent_RobotP_->id,
+				CMessager::CommandType::HEARTBEAT,
+				{}
+			);
+		}
+		for (auto& pair : sons_->children_mapRobotP_) {
+			sons_->messager_.sendCommand(
+				pair.first,
+				CMessager::CommandType::HEARTBEAT,
+				{}
+			);
+		}
 		// recruit all
 		for (auto& pair : sons_->neighbors_mapRobot_) {
 			if ((m_WaitingList.find(pair.first) == m_WaitingList.end()) &&
@@ -143,7 +200,6 @@ namespace SoNSLib {
 		if (sons_->ExistsInChildren(_id)) {sons_->children_mapRobotP_.erase(_id);}
 		if (sons_->ExistsInParent(_id)) {
 			sons_->parent_RobotP_ = nullptr;
-			lockCD = 5;
 		}
 	}
 
@@ -159,6 +215,7 @@ namespace SoNSLib {
 	}
 
 	void SoNSConnector::UpdateSoNSID() {
+		lockCD = 5;
 		for (auto& pair : sons_->children_mapRobotP_) {
 			sons_->messager_.sendCommand(
 				pair.first,

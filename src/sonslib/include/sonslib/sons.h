@@ -19,7 +19,7 @@ namespace SoNSLib {
 	//- structs ---------------------------------------------------------------------------------------------
 	struct SoNSParameters {
 		double seenCDTime = 3;
-		double heartbeatTime = 3;
+		double heartbeatCDTime = 3;
 		double recruitWaitingTime = 1;
 	};
 

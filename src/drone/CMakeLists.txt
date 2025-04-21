@@ -48,7 +48,12 @@ target_link_libraries(droneSwarmSystem "${cpp_typesupport_target}")
 
 install(TARGETS   droneSwarmSystem  DESTINATION lib/${PROJECT_NAME})
 install(DIRECTORY launch/  DESTINATION share/${PROJECT_NAME}/launch)
-install(DIRECTORY scripts/  DESTINATION share/${PROJECT_NAME}/scripts)
+
+install(
+  DIRECTORY scripts/
+  DESTINATION lib/${PROJECT_NAME}
+  USE_SOURCE_PERMISSIONS
+)
 
 configure_file(scripts/configuration_example.in.argos scripts/configuration_example.argos)
 configure_file(scripts/configuration_template.in.argos scripts/configuration_template.argos)

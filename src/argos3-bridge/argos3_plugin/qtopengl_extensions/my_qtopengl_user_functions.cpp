@@ -334,7 +334,7 @@ namespace argos {
    /****************************************/
 
   void CMyQtOpenGLUserFunctions::DrawArrow3(const CVector3& c_from, const CVector3& c_to) {
-      DrawArrow3(c_from, c_to, 0.015625f * 2, 0.031250f * 2.5);
+      DrawArrow3(c_from, c_to, 0.015625f * 2, 0.031250f * 8.5);
    }
 
    void CMyQtOpenGLUserFunctions::DrawArrow3(const CVector3& c_from, const CVector3& c_to, Real f_arrow_thickness, Real f_arrow_head) {
