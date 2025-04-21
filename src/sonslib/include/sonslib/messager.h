@@ -13,6 +13,7 @@ using std::string;
 using std::vector;
 #include <map>
 using std::map;
+#include <sstream>
 
 namespace SoNSLib {
 	class CMessager {
@@ -43,8 +44,23 @@ namespace SoNSLib {
 		void sendCommand(const string& _id, CommandType _type, const vector<uint8_t>& _content);
 		map<string, vector<uint8_t>> combineCommands();
 		void OrganizeReceivedCommands(const vector<struct SoNSMessage>& receivedMessages);
+		static string printCommandType(CommandType _type);
 
 		// message --------------------------------------------------------------
+		static inline string printHex(const vector<uint8_t>& _content) {
+			std::ostringstream hexlog;
+			for (const uint8_t byte : _content) {
+				// Convert byte to hex string with leading zero if needed
+				hexlog << std::hex << std::uppercase;
+				if (static_cast<int>(byte) < 16) hexlog << "0";
+				hexlog << static_cast<int>(byte) << " ";
+			}
+			hexlog << std::dec;
+			return hexlog.str();
+		}
+
+		string static printCmd(const vector<uint8_t>& _content, string indents);
+
 		inline static void pushCommand(vector<uint8_t>& _binary, CommandType _type, const vector<uint8_t>& _content) {
 			_binary.push_back(MessageHeader);
 			pushCommandType(_binary, _type);

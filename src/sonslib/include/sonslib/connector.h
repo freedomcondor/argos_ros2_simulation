@@ -20,7 +20,7 @@ namespace SoNSLib {
 		SoNSConnector(SoNS& sons) : SoNSModule(sons) {};
 		void Init() override;
 		void UpdateSoNSID();
-		void Step(double time, std::ostringstream& log);
+		void Step(double time);
 
 		void Recruit(string id) override;
 		void Remove(string id) override;

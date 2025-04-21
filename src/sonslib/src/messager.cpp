@@ -32,4 +32,53 @@ namespace SoNSLib {
 			}
 		}
 	}
+
+	string CMessager::printCommandType(CommandType _type) {
+		switch (_type) {
+			case CommandType::RECRUIT:
+				return "RECRUIT";
+			case CommandType::ACKNOWLEDGEMENT:
+				return "ACKNOWLEDGEMENT"; 
+			case CommandType::UPDATE:
+				return "UPDATE";
+			case CommandType::BREAK:
+				return "BREAK";
+			default:
+				return "UNKNOWN";
+		}
+	}
+
+	string CMessager::printCmd(const vector<uint8_t>& _content, string indents) {
+		std::ostringstream cmdlog;
+		uint i = 0;
+		while (i < _content.size()) {
+			CommandType type;
+			vector<uint8_t> cmd;
+			parseCommand(_content, i, type, cmd);
+			cmdlog << indents << printCommandType(type) << ", ";
+
+			uint contentI = 0;
+			switch (type) {
+				case CommandType::RECRUIT:
+					cmdlog << parseString(cmd, contentI) << " "
+					       << parseDouble(cmd, contentI);
+					break;
+				case CommandType::ACKNOWLEDGEMENT:
+					break;
+				case CommandType::UPDATE:
+					cmdlog << parseString(cmd, contentI) << " "
+					       << parseDouble(cmd, contentI);
+					break;
+				case CommandType::BREAK:
+					break;
+				default:
+					break;
+			}
+
+			cmdlog << std::endl;
+		}
+
+		return cmdlog.str();
+	}
+
 }

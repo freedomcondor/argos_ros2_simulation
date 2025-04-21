@@ -97,6 +97,7 @@ namespace SoNSLib {
 
 			// utils
 			SoNSParameters parameters_;
+			std::ostringstream log_;
 			CMessager messager_;
 			map<CMessager::CommandType, vector<CMessager::Command>>& GetReceivedCommands() {return messager_.GetReceivedCommands();}
 

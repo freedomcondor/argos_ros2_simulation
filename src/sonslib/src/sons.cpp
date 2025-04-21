@@ -76,47 +76,20 @@ namespace SoNSLib {
 		const vector<SoNSRobot>& perceivedNeighbors,
 		const vector<struct SoNSMessage>& receivedMessages
 	) {
-		std::ostringstream log;
-		std::cout << "----------- I am " << myId_str_ << ", I belong to " << sonsId_str_ << ", My quality is " << sonsQuality_f_ << "------------------------------------" << endl; // 记录信息
+		log_.str("");
+		log_ << endl << "-------------------------------------------------------------------" << endl; // 记录信息
+		log_ << "---I am " << myId_str_ << ", I belong to " << sonsId_str_ << ", My quality is " << sonsQuality_f_ << "------------------------------------" << endl; // 记录信息
 
+		log_ << "--- raw input --------" << endl;
 		//- debug print raw messages ---------------------------------------------
 		for (const auto& message : receivedMessages) {
-			std::cout << "Message binary in hex: ";
-			for (const uint8_t byte : message.binary) {
-				// Convert byte to hex string with leading zero if needed
-				std::cout << std::hex << std::uppercase;
-				if (static_cast<int>(byte) < 16) std::cout << "0";
-				std::cout << static_cast<int>(byte) << " ";
-			}
-			std::cout << std::dec << endl;
-
-			uint index = 1; // 0xCC header
-			std::cout << "Received message from : " << message.id << " "
-				<< CMessager::parseCommandType(message.binary, index) << " "
-				<< CMessager::parseUint16(message.binary, index) << " "
-				//<< CMessager::parseString(message.binary, index) << " "
-				//<< CMessager::parseDouble(message.binary, index) << " "
-				<< endl;
+			log_ << "\tMessage : " << message.id << ", " << messager_.printHex(message.binary) << endl;
+			log_ << messager_.printCmd(message.binary, "\t\t");
 		}
-		std::cout << "neighbours : ----------------------" << endl;
+		log_ << "\tneighbours : ----------------------" << endl;
 		for (auto& pair : neighbors_mapRobot_) {
-			std::cout << pair.first << "\t ";
+			log_ << "\t\t" << pair.first << endl;
 		}
-		std::cout << endl;
-		std::cout << "parent : ----------------------" << endl;
-		if (parent_RobotP_ != nullptr) std::cout << parent_RobotP_->id;
-		std::cout << endl;
-		std::cout << "children : ----------------------" << endl;
-		for (auto& pair : children_mapRobotP_) {
-			std::cout << pair.first << "\t ";
-		}
-		std::cout << endl;
-		std::cout << "waiting list: ----------------------" << endl;
-		for (auto& pair : sonsConnector.m_WaitingList) {
-			std::cout << pair.first << "\t " << pair.second.waitingTimeCountDown;
-		}
-		std::cout << endl;
-
 
 		//--------------------------------------------------------------
 
@@ -124,16 +97,34 @@ namespace SoNSLib {
 		messager_.OrganizeReceivedCommands(receivedMessages);
 		UpdateNeighbors(perceivedNeighbors, time);
 
-		sonsConnector.Step(time, log);
+		sonsConnector.Step(time);
 		/*
 		for (auto& module : modules_) {
 			module->Step(time, log);
 		}
 		*/
+
+		log_ << "--- step result --------" << endl;
+		log_ << "\tparent : --------" << endl;
+		if (parent_RobotP_ != nullptr) log_ << "\t\t" << parent_RobotP_->id << endl;
+		log_ << "\tchildren : ----------------------" << endl;
+		for (auto& pair : children_mapRobotP_) {
+			log_ << "\t\t" << pair.first << endl;
+		}
+		log_ << "\twaiting list: ----------------------" << endl;
+		for (auto& pair : sonsConnector.m_WaitingList) {
+			log_ << "\t\t" << pair.first << "\t " << pair.second.waitingTimeCountDown << endl;
+		}
+
 		SoNSStepResult result;
 		map<string, vector<uint8_t>> messageMap = messager_.combineCommands();
 		for (auto& pair : messageMap) result.messages.push_back({pair.first, pair.second});
-		result.log = log.str(); // 将ostringstream转换为string
+		result.log = log_.str(); // 将ostringstream转换为string
+
+		for (const auto& message : result.messages) {
+			log_ << "\tSending : " << message.id << ", " << messager_.printHex(message.binary) << endl;
+		}
+
 		/*
 		for (const auto& neighbour : neighbors_mapRobot_) {
 			result.drawArrows.emplace_back(SoNSArrow::Color::BLUE, neighbour.second.GetPosition());

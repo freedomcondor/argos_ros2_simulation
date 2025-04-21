@@ -19,14 +19,14 @@ namespace SoNSLib {
 		sons_->sonsQuality_f_= dis(gen); // 生成随机数并赋值给sonsQuality
 	}
 
-	void SoNSConnector::Step(double time, std::ostringstream& log) {
-		std::cout << "lockCD = " << lockCD << std::endl;
+	void SoNSConnector::Step(double time) {
+		sons_->log_ << "-- recruitor -----------------------" << endl;
+		sons_->log_ << "\tlockCD = " << lockCD << std::endl;
 		if (lockCD > 0) lockCD -= time;
 		UpdateWaitingList(time);
 
 		// check ack
 		for (const auto& command : sons_->GetReceivedCommands()[CMessager::CommandType::ACKNOWLEDGEMENT]) {
-			std::cout << " I am " << sons_->myId_str_ << ", I receive ack" << endl;
 			string fromId = command.id;
 			if ((sons_->ExistsInNeighbors(fromId)) &&
 			    (m_WaitingList.find(fromId) != m_WaitingList.end())
@@ -42,7 +42,26 @@ namespace SoNSLib {
 			sons_->RemoveWithUpdate(fromId);
 		}
 
+		// check update
+		for (const auto& command : sons_->GetReceivedCommands()[CMessager::CommandType::UPDATE]) {
+			string fromId = command.id;
+			if (sons_->ExistsInParent(fromId)) {
+				uint index = 0;
+				string his_sonsId;
+				double his_sonsQuality;
+				parseRecruitMessage(command.binary, index, his_sonsId, his_sonsQuality);
+				sons_->sonsId_str_ = his_sonsId;
+				sons_->sonsQuality_f_ = his_sonsQuality;
+				UpdateSoNSID();
+			}
+		}
+
 		// check recruit messages
+		string bestFromId;
+		string bestSonsId;
+		double bestSonsQuality = sons_->sonsQuality_f_;
+		bool foundBetter = false;
+
 		for (const auto& command : sons_->GetReceivedCommands()[CMessager::CommandType::RECRUIT]) {
 			string fromId = command.id;
 			uint index = 0;
@@ -51,25 +70,32 @@ namespace SoNSLib {
 			parseRecruitMessage(command.binary, index, his_sonsId, his_sonsQuality);
 			if ((sons_->ExistsInNeighbors(fromId)) &&
 			    (his_sonsId != sons_->sonsId_str_) &&
-			    (his_sonsQuality > sons_->sonsQuality_f_) &&
+			    (his_sonsQuality > bestSonsQuality) &&
 			    (lockCD < 0)
 			   ) {
-				// remove in wait list
-				if (m_WaitingList.find(fromId) != m_WaitingList.end()) {m_WaitingList.erase(fromId);};
-				// if already has parent
-				if (sons_->parent_RobotP_ != nullptr) {
-					sons_->messager_.sendCommand(sons_->parent_RobotP_->id, CMessager::CommandType::BREAK, {});
-					sons_->Remove(sons_->parent_RobotP_->id);
-				}
-				sons_->parent_RobotP_ = &sons_->neighbors_mapRobot_[fromId];
-				sons_->messager_.sendCommand(
-					fromId,
-					CMessager::CommandType::ACKNOWLEDGEMENT, {}
-				);
-				sons_->sonsId_str_ = his_sonsId;
-				sons_->sonsQuality_f_ = his_sonsQuality;
-				UpdateSoNSID();
+				bestFromId = fromId;
+				bestSonsId = his_sonsId;
+				bestSonsQuality = his_sonsQuality;
+				foundBetter = true;
 			}
+		}
+
+		if (foundBetter) {
+			// remove in wait list
+			if (m_WaitingList.find(bestFromId) != m_WaitingList.end()) {m_WaitingList.erase(bestFromId);};
+			// if already has parent
+			if (sons_->parent_RobotP_ != nullptr) {
+				sons_->messager_.sendCommand(sons_->parent_RobotP_->id, CMessager::CommandType::BREAK, {});
+				sons_->Remove(sons_->parent_RobotP_->id);
+			}
+			sons_->parent_RobotP_ = &sons_->neighbors_mapRobot_[bestFromId];
+			sons_->messager_.sendCommand(
+				bestFromId,
+				CMessager::CommandType::ACKNOWLEDGEMENT, {}
+			);
+			sons_->sonsId_str_ = bestSonsId;
+			sons_->sonsQuality_f_ = bestSonsQuality;
+			UpdateSoNSID();
 		}
 
 		// recruit all
@@ -95,25 +121,13 @@ namespace SoNSLib {
 				it++;
 			}
 		}
-
-		std::cout << "in update" << std::endl;
-		std::cout << "waiting list\n";
-		for (auto& pair : m_WaitingList) {
-			std::cout << "    " << pair.first << "\t " << pair.second.waitingTimeCountDown << std::endl;
-		}
 	}
 
 	void SoNSConnector::Recruit(string id) {
-		std::cout << "in recruit" << std::endl;
 		WaitingSoNSRobot waitingSoNSRobot;
 		waitingSoNSRobot.pRobot = &(sons_->neighbors_mapRobot_[id]);
 		waitingSoNSRobot.waitingTimeCountDown = sons_->parameters_.recruitWaitingTime;
 		m_WaitingList[id] = waitingSoNSRobot;
-
-		std::cout << "waiting list\n";
-		for (auto& pair : m_WaitingList) {
-			std::cout << "    " << pair.first << "\t " << pair.second.waitingTimeCountDown << std::endl;
-		}
 
 		sons_->messager_.sendCommand(
 			id,
@@ -134,16 +148,12 @@ namespace SoNSLib {
 	}
 
 	void SoNSConnector::RemoveWithUpdate(string _id) {
-		std::cout << "removing with update" << std::endl;
 		if (sons_->ExistsInParent(_id)) {
-			std::cout << "removing parent" << std::endl;
 			sons_->Remove(_id);
 			Init();
 			UpdateSoNSID();
-			std::cout << "after init, sonsID = " << sons_->sonsId_str_ << std::endl;
 		}
 		else {
-			std::cout << "not removing parent" << std::endl;
 			sons_->Remove(_id);
 		}
 	}

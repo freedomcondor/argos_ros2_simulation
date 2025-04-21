@@ -12,7 +12,7 @@ namespace argos {
 #include "debug/debug_entity.h"
 
 #include "rclcpp/rclcpp.hpp"
-#include "std_msgs/msg/string.hpp"
+#include "std_msgs/msg/empty.hpp"
 #include "geometry_msgs/msg/pose.hpp"
 
 namespace argos {
@@ -37,6 +37,8 @@ namespace argos {
       rclcpp::Node::SharedPtr m_LoopFunctionRos2NodeHandle;
       rclcpp::Subscription<geometry_msgs::msg::Pose>::SharedPtr m_debugActuatorSubscriber;
       void debugActuatorCallback(const geometry_msgs::msg::Pose::SharedPtr pose);
+
+      rclcpp::Publisher<std_msgs::msg::Empty>::SharedPtr m_pSimuTick;
    };
 }
 

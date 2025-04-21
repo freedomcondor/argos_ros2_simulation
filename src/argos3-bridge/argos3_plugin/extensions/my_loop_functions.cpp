@@ -11,6 +11,7 @@ namespace argos {
          rclcpp::init(0, nullptr);
       }
       m_LoopFunctionRos2NodeHandle = std::make_shared<rclcpp::Node>("argos_loop_function_node");
+		m_pSimuTick = m_LoopFunctionRos2NodeHandle->create_publisher<std_msgs::msg::Empty>("/simuTick", 10);
       m_debugActuatorSubscriber = m_LoopFunctionRos2NodeHandle->create_subscription<geometry_msgs::msg::Pose>(
          "/drawArrows", 1000,
          std::bind(&CMyLoopFunctions::debugActuatorCallback, this, std::placeholders::_1)
@@ -30,6 +31,9 @@ namespace argos {
 
    void CMyLoopFunctions::PreStep() {
       m_pDebugEntity->GetArrows().clear();
+
+      std_msgs::msg::Empty msg;
+      m_pSimuTick->publish(msg);
    }
 
    /****************************************/

@@ -9,6 +9,7 @@ using std::map;
 
 #include "rclcpp/rclcpp.hpp"
 #include "geometry_msgs/msg/pose.hpp"
+#include "std_msgs/msg/empty.hpp"
 #include "std_msgs/msg/byte_multi_array.hpp"
 
 #include "drone/msg/pose_sharing.hpp"
@@ -85,10 +86,21 @@ public:
 		m_drawArrowPublisher =
 			this->create_publisher<geometry_msgs::msg::Pose>("/drawArrows", 10);
 
-		// step timer, call step() in a frequency
-		m_Timer = this->create_wall_timer(
-			std::chrono::milliseconds(200), // ms
-			[this]() { this->step(); } // 定时器回调
+		// Subscribe to simuTick topic to start timer on first signal
+		m_SimuTickSubscriber = this->create_subscription<std_msgs::msg::Empty>("/simuTick", 10,
+			[this](const std_msgs::msg::Empty::SharedPtr) -> void {
+				// Only start timer on first tick if not already started
+				// step timer, call step() in a frequency
+				/*
+				if (!m_Timer) {
+					m_Timer = this->create_wall_timer(
+						std::chrono::milliseconds(200), // ms
+						[this]() { this->step(); }
+					);
+				}
+				*/
+				step();
+			}
 		);
 	}
 
@@ -112,7 +124,7 @@ public:
 		m_receivedMessages.clear();
 
 		// Log the message from SoNS
-		//RCLCPP_INFO(this->get_logger(), "%s", result.log.c_str());
+		RCLCPP_INFO(this->get_logger(), "%s", result.log.c_str());
 
 		// enforce output velocity
 		setVelocity(result.outputVelocity);
@@ -234,6 +246,7 @@ private:
 	rclcpp::Publisher<drone::msg::PoseSharing>::SharedPtr m_PoseSharingPublisher;
 
 	rclcpp::Publisher<geometry_msgs::msg::Pose>::SharedPtr m_drawArrowPublisher;
+	rclcpp::Subscription<std_msgs::msg::Empty>::SharedPtr m_SimuTickSubscriber;
 
 	rclcpp::TimerBase::SharedPtr m_Timer; // 定时器
 
