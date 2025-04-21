@@ -19,8 +19,9 @@ namespace SoNSLib {
 	public:
 		SoNSConnector(SoNS& sons) : SoNSModule(sons) {};
 		void Init() override;
-		void UpdateSoNSID();
+		void PreStep() override;
 		void Step(double time);
+		void UpdateSoNSID();
 
 		void Recruit(string id) override;
 		void Remove(string id) override;
@@ -32,12 +33,15 @@ namespace SoNSLib {
 			double waitingTimeCountDown;
 			SoNSRobot* pRobot;
 		};
-		double lockCD = -1;
 		map<string, WaitingSoNSRobot> m_WaitingList;
 		void UpdateWaitingList(double time);
+
+		map<string, double> branchQualities_;
 		//------------------------------------------------------
 		vector<uint8_t> generateRecruitMessage(string sons_id, double sons_quality);
 		void parseRecruitMessage(const vector<uint8_t>& _binary, uint& i, string& _his_id, double& _his_quality);
+		vector<uint8_t> generateBranchQualities(const map<string, double>& _branchQualities);
+		void parseBranchQualities(const vector<uint8_t>& _binary, uint& i, map<string, double>& _branchQualities);
 	};
 }
 

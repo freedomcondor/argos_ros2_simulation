@@ -29,6 +29,10 @@ namespace SoNSLib {
 		string type;
 		double heartbeatCD;
 		double seenCD;
+
+		// connector
+		map<string, double> branchQualities;
+
 		CTransform transform;
 		CVector3 GetPosition() const {return transform.m_Position;}
 		CQuaternion GetOrientation() const {return transform.m_Orientation;}

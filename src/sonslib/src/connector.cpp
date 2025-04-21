@@ -19,10 +19,12 @@ namespace SoNSLib {
 		sons_->sonsQuality_f_= dis(gen); // 生成随机数并赋值给sonsQuality
 	}
 
+	void SoNSConnector::PreStep() {
+		branchQualities_.clear();
+	}
+
 	void SoNSConnector::Step(double time) {
 		sons_->log_ << "-- recruitor -----------------------" << endl;
-		sons_->log_ << "\tlockCD = " << lockCD << std::endl;
-		if (lockCD > 0) lockCD -= time;
 		UpdateWaitingList(time);
 
 		// check heartbeat
@@ -32,10 +34,13 @@ namespace SoNSLib {
 				sons_->parent_RobotP_->heartbeatCD = sons_->parameters_.heartbeatCDTime;
 			} else if (sons_->ExistsInChildren(fromId)) {
 				sons_->children_mapRobotP_[fromId]->heartbeatCD = sons_->parameters_.heartbeatCDTime;
+				uint i = 0;
+				sons_->children_mapRobotP_[fromId]->branchQualities.clear();
+				parseBranchQualities(command.binary, i, sons_->children_mapRobotP_[fromId]->branchQualities);
 			}
 		}
 
-		// countdown heartbeat for parent
+		// countd,own heartbeat for parent
 		if (sons_->parent_RobotP_ != nullptr) {
 			sons_->parent_RobotP_->heartbeatCD -= time;
 			if (sons_->parent_RobotP_->heartbeatCD < 0) {
@@ -74,6 +79,9 @@ namespace SoNSLib {
 				sons_->children_mapRobotP_[fromId] = &sons_->neighbors_mapRobot_[fromId];
 				sons_->children_mapRobotP_[fromId]->heartbeatCD = sons_->parameters_.heartbeatCDTime;
 				m_WaitingList.erase(fromId);
+				uint i = 0;
+				sons_->children_mapRobotP_[fromId]->branchQualities.clear();
+				parseBranchQualities(command.binary, i, sons_->children_mapRobotP_[fromId]->branchQualities);
 			}
 		}
 
@@ -91,9 +99,23 @@ namespace SoNSLib {
 				string his_sonsId;
 				double his_sonsQuality;
 				parseRecruitMessage(command.binary, index, his_sonsId, his_sonsQuality);
+				branchQualities_[sons_->sonsId_str_] = sons_->sonsQuality_f_;
 				sons_->sonsId_str_ = his_sonsId;
 				sons_->sonsQuality_f_ = his_sonsQuality;
 				UpdateSoNSID();
+			}
+		}
+
+		// add branchQualities
+		branchQualities_[sons_->sonsId_str_] = sons_->sonsQuality_f_;
+		for (const auto& pair : sons_->children_mapRobotP_) {
+			for (const auto& branch : pair.second->branchQualities) {
+				auto it = branchQualities_.find(branch.first);
+				if (it != branchQualities_.end()) {
+					it->second = std::max(it->second, branch.second);
+				} else {
+					branchQualities_[branch.first] = branch.second;
+				}
 			}
 		}
 
@@ -112,7 +134,8 @@ namespace SoNSLib {
 			if ((sons_->ExistsInNeighbors(fromId)) &&
 			    (his_sonsId != sons_->sonsId_str_) &&
 			    (his_sonsQuality > bestSonsQuality) &&
-			    (lockCD < 0)
+			    //(branchQualities_.find(his_sonsId) == branchQualities_.end())
+			    (branchQualities_.size() == 1)
 			   ) {
 				bestFromId = fromId;
 				bestSonsId = his_sonsId;
@@ -133,8 +156,10 @@ namespace SoNSLib {
 			sons_->parent_RobotP_->heartbeatCD = sons_->parameters_.heartbeatCDTime;
 			sons_->messager_.sendCommand(
 				bestFromId,
-				CMessager::CommandType::ACKNOWLEDGEMENT, {}
+				CMessager::CommandType::ACKNOWLEDGEMENT,
+				generateBranchQualities(branchQualities_)
 			);
+			branchQualities_[sons_->sonsId_str_] = sons_->sonsQuality_f_;
 			sons_->sonsId_str_ = bestSonsId;
 			sons_->sonsQuality_f_ = bestSonsQuality;
 			UpdateSoNSID();
@@ -145,7 +170,7 @@ namespace SoNSLib {
 			sons_->messager_.sendCommand(
 				sons_->parent_RobotP_->id,
 				CMessager::CommandType::HEARTBEAT,
-				{}
+				generateBranchQualities(branchQualities_)
 			);
 		}
 		for (auto& pair : sons_->children_mapRobotP_) {
@@ -206,6 +231,7 @@ namespace SoNSLib {
 	void SoNSConnector::RemoveWithUpdate(string _id) {
 		if (sons_->ExistsInParent(_id)) {
 			sons_->Remove(_id);
+			branchQualities_[sons_->sonsId_str_] = sons_->sonsQuality_f_;
 			Init();
 			UpdateSoNSID();
 		}
@@ -215,8 +241,17 @@ namespace SoNSLib {
 	}
 
 	void SoNSConnector::UpdateSoNSID() {
-		lockCD = 5;
 		for (auto& pair : sons_->children_mapRobotP_) {
+			sons_->messager_.sendCommand(
+				pair.first,
+				CMessager::CommandType::UPDATE,
+				generateRecruitMessage(
+					sons_->sonsId_str_,
+					sons_->sonsQuality_f_
+				)
+			);
+		}
+		for (const auto& pair : m_WaitingList) {
 			sons_->messager_.sendCommand(
 				pair.first,
 				CMessager::CommandType::UPDATE,
@@ -239,5 +274,24 @@ namespace SoNSLib {
 	void SoNSConnector::parseRecruitMessage(const vector<uint8_t>& _binary, uint& i, string& _his_id, double& _his_quality) {
 		_his_id = CMessager::parseString(_binary, i);
 		_his_quality = CMessager::parseDouble(_binary, i);
+	}
+
+	vector<uint8_t> SoNSConnector::generateBranchQualities(const map<string, double>& _branchQualities) {
+		vector<uint8_t> content;
+		CMessager::pushUint16(content, _branchQualities.size());
+		for (const auto& pair : _branchQualities) {
+			CMessager::pushString(content, pair.first);
+			CMessager::pushDouble(content, pair.second);
+		}
+		return content;
+	}
+
+	void SoNSConnector::parseBranchQualities(const vector<uint8_t>& _binary, uint& i, map<string, double>& _branchQualities) {
+		uint16_t size = CMessager::parseUint16(_binary, i);
+		for (uint16_t j = 0; j < size; ++j) {
+			string branchId = CMessager::parseString(_binary, i);
+			double branchQuality = CMessager::parseDouble(_binary, i);
+			_branchQualities[branchId] = branchQuality;
+		}
 	}
 }

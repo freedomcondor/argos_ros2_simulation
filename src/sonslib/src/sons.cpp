@@ -115,6 +115,10 @@ namespace SoNSLib {
 		for (auto& pair : sonsConnector.m_WaitingList) {
 			log_ << "\t\t" << pair.first << "\t " << pair.second.waitingTimeCountDown << endl;
 		}
+		log_ << "\tbranch qualities: ----------------------" << endl;
+		for (const auto& pair : sonsConnector.branchQualities_) {
+			log_ << "\t\t" << pair.first << "\t" << pair.second << endl;
+		}
 
 		SoNSStepResult result;
 		map<string, vector<uint8_t>> messageMap = messager_.combineCommands();

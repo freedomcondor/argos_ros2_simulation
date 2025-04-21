@@ -120,6 +120,7 @@ public:
 			neighbours.emplace_back(id, "drone", pose);
 		}
 		// run step
+		sons.PreStep();
 		struct SoNSStepResult result = sons.Step(0.2, neighbours, m_receivedMessages);
 		m_receivedMessages.clear();
 
