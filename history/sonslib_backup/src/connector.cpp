@@ -1,6 +1,5 @@
 #include "connector.h"
 #include "messager.h"
-#include "sons.h"
 
 #include <random>
 
@@ -9,19 +8,17 @@ using std::endl;
 
 namespace SoNSLib {
 
-	void SoNSConnector::Init() {
-		sons_->sonsId_str_ = sons_->myId_str_;
+	void SoNSConnector::Initialize(SoNSData& sonsData) {
+		sonsData.sonsId = sonsData.myId; // 生成随机数并赋值给sonsQuality
 		// 随机数生成器
 		std::random_device rd; // 获取随机数种子
 		std::mt19937 gen(rd()); // 使用梅森旋转算法生成随机数
 		std::uniform_real_distribution<> dis(0.0, 1.0); // 定义范围为0到1的均匀分布
-
-		sons_->sonsQuality_f_= dis(gen); // 生成随机数并赋值给sonsQuality
+		sonsData.sonsQuality = dis(gen); // 生成随机数并赋值给sonsQuality
 	}
 
-	void SoNSConnector::Step(double time, std::ostringstream& log) {
+	void SoNSConnector::Step(SoNSData& sonsData, double time, std::ostringstream& log) {
 		UpdateWaitingList(time);
-		/*
 		// check break
 		for (const auto& command : sonsData.GetReceivedCommands()[CMessager::CommandType::BREAK]) {
 			string fromId = command.id;
@@ -83,7 +80,6 @@ namespace SoNSLib {
 		for (const auto& pair : m_WaitingList) {
 			log << "    Robot ID: " << pair.first << ", Waiting Time Countdown: " << pair.second.waitingTimeCountDown << endl;
 		}
-		*/
 	};
 
 	void SoNSConnector::UpdateWaitingList(double time) {
@@ -95,7 +91,6 @@ namespace SoNSLib {
 		}
 	}
 
-	/*
 	void SoNSConnector::Recruit(SoNSData& sonsData, string id) {
 		WaitingSoNSRobot waitingSoNSRobot;
 		waitingSoNSRobot.pRobot = &(sonsData.neighbors[id]);
@@ -133,7 +128,6 @@ namespace SoNSLib {
 			);
 		}
 	}
-	*/
 
 	//------------------------------------------------------
 	vector<uint8_t> SoNSConnector::generateRecruitMessage(string sons_id, double sons_quality) {

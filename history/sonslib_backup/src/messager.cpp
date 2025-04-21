@@ -1,5 +1,5 @@
 #include "messager.h"
-#include "sons.h"
+#include "sonsDataStruct.h"
 
 namespace SoNSLib {
 	// cmd --------------------------------------------------------------

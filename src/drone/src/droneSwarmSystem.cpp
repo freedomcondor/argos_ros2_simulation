@@ -32,7 +32,7 @@ public:
 			m_strMyID = m_strMyID.substr(1); // Remove leading '/'
 		}
 
-		sons.Initialize(m_strMyID, "drone");
+		sons.Init(m_strMyID, "drone");
 
 		m_VelocityActuatorPublisher =
 			this->create_publisher<geometry_msgs::msg::Pose>("droneVelocityActuator", 10);
@@ -226,7 +226,6 @@ private:
 
 	std::map<string, rclcpp::Publisher<drone::msg::Message>::SharedPtr> m_SwarmCommunicationPublishers;
 	rclcpp::Subscription<drone::msg::Message>::SharedPtr m_SwarmCommunicationSubscriber;
-	vector<struct SoNSMessage> m_receivedMessages;
 
 	rclcpp::Subscription<geometry_msgs::msg::Pose>::SharedPtr m_PositionSensorSubscriber;
 	rclcpp::Publisher<geometry_msgs::msg::Pose>::SharedPtr m_VelocityActuatorPublisher;
@@ -238,6 +237,8 @@ private:
 
 	rclcpp::TimerBase::SharedPtr m_Timer; // 定时器
 
+	// SoNS
+	vector<struct SoNSMessage> m_receivedMessages;
 	SoNS sons;
 };
 

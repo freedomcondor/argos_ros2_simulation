@@ -2,34 +2,25 @@
 #define CONNECTOR_H
 
 #include <sstream>
-#include <map>
-using std::map;
-#include <vector>
-using std::vector;
-#include <string>
-using std::string;
 
-#include "module.h"
+#include "sonsDataStruct.h"
 
 namespace SoNSLib {
-	class SoNS;
-    struct SoNSRobot;
-
-	class SoNSConnector : public SoNSModule {
+	class SoNSConnector {
 	public:
-		SoNSConnector(SoNS& sons) : SoNSModule(sons) {};
-		void Init() override;
-		//void UpdateSoNSID(SoNSData& sonsData);
-		void Step(double time, std::ostringstream& log);
-
-		//void Recruit(SoNSData& sonsData, string id);
-		//void Remove(SoNSData& sonsData, string id);
-
-	private:
 		struct WaitingSoNSRobot {
 			double waitingTimeCountDown;
 			SoNSRobot* pRobot;
 		};
+
+		void Initialize(SoNSData& sonsData);
+		void UpdateSoNSID(SoNSData& sonsData);
+		void Step(SoNSData& sonsData, double time, std::ostringstream& log);
+
+		void Recruit(SoNSData& sonsData, string id);
+		void Remove(SoNSData& sonsData, string id);
+
+	private:
 		map<string, WaitingSoNSRobot> m_WaitingList;
 		void UpdateWaitingList(double time);
 		//------------------------------------------------------
