@@ -14,6 +14,7 @@ using namespace swarmMathLib;
 #include "module.h"
 #include "messager.h"
 #include "connector.h"
+#include "flocking.h"
 
 namespace SoNSLib {
 	//- structs ---------------------------------------------------------------------------------------------
@@ -95,6 +96,9 @@ namespace SoNSLib {
 			bool ExistsInChildren(string _id) {return children_mapRobotP_.find(_id) != children_mapRobotP_.end();}
 			bool ExistsInParent(string _id) {return parent_RobotP_ != nullptr && parent_RobotP_->id == _id;}
 
+			// outputs
+			CVector3 outputVelocity_;
+
 			// utils
 			SoNSParameters parameters_;
 			std::ostringstream log_;
@@ -103,6 +107,7 @@ namespace SoNSLib {
 
 			// modules
 			SoNSConnector sonsConnector;
+			SoNSFlocking sonsFlocking;
 
 		private:
 			std::vector<std::shared_ptr<SoNSModule>> modules_;

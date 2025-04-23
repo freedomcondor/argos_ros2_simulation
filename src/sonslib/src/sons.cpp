@@ -9,13 +9,15 @@ using std::endl;
 using std::map;
 
 #include "sons.h"
-//#include "ModuleA.h"
-//#include "ModuleB.h"
 
 namespace SoNSLib {
 
-	SoNS::SoNS() : sonsConnector(*this) {
+	SoNS::SoNS() :
+		sonsConnector(*this),
+		sonsFlocking(*this)
+	{
 		RegisterModule(std::shared_ptr<SoNSConnector>(&sonsConnector, [](SoNSConnector*){}));
+		RegisterModule(std::shared_ptr<SoNSFlocking>(&sonsFlocking, [](SoNSFlocking*){}));
 	}
 
 	void SoNS::Init(string _myId, string _myType) {
@@ -98,11 +100,9 @@ namespace SoNSLib {
 		UpdateNeighbors(perceivedNeighbors, time);
 
 		sonsConnector.Step(time);
-		/*
 		for (auto& module : modules_) {
-			module->Step(time, log);
+			module->Step();
 		}
-		*/
 
 		log_ << "--- step result --------" << endl;
 		log_ << "\tparent : --------" << endl;
@@ -115,11 +115,13 @@ namespace SoNSLib {
 		for (auto& pair : sonsConnector.m_WaitingList) {
 			log_ << "\t\t" << pair.first << "\t " << pair.second.waitingTimeCountDown << endl;
 		}
+		log_<< "\tvelocity : " << outputVelocity_ << endl;
 
 		SoNSStepResult result;
 		map<string, vector<uint8_t>> messageMap = messager_.combineCommands();
 		for (auto& pair : messageMap) result.messages.push_back({pair.first, pair.second});
 		result.log = log_.str(); // 将ostringstream转换为string
+		result.outputVelocity = outputVelocity_;
 
 		for (const auto& message : result.messages) {
 			log_ << "\tSending : " << message.id << ", " << messager_.printHex(message.binary) << endl;
