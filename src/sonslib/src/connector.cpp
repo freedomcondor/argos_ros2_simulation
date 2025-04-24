@@ -108,13 +108,12 @@ namespace SoNSLib {
 
 		// add branchQualities
 		branchQualities_[sons_->sonsId_str_] = sons_->sonsQuality_f_;
-		for (const auto& pair : sons_->children_mapRobotP_) {
-			for (const auto& branch : pair.second->branchQualities) {
-				auto it = branchQualities_.find(branch.first);
-				if (it != branchQualities_.end()) {
-					it->second = std::max(it->second, branch.second);
+		for (const auto& [robotId, robotP] : sons_->children_mapRobotP_) {
+			for (const auto& [sonsId, quality] : robotP->branchQualities) {
+				if (branchQualities_.find(sonsId) != branchQualities_.end()) {
+					branchQualities_[sonsId] = std::max(branchQualities_[sonsId], quality);
 				} else {
-					branchQualities_[branch.first] = branch.second;
+					branchQualities_[sonsId] = quality;
 				}
 			}
 		}
@@ -173,21 +172,21 @@ namespace SoNSLib {
 				generateBranchQualities(branchQualities_)
 			);
 		}
-		for (auto& pair : sons_->children_mapRobotP_) {
+		for (const auto& [id, robotp] : sons_->children_mapRobotP_) {
 			sons_->messager_.sendCommand(
-				pair.first,
+				id,
 				CMessager::CommandType::HEARTBEAT,
 				{}
 			);
 		}
 		// recruit all
-		for (auto& pair : sons_->neighbors_mapRobot_) {
-			if ((m_WaitingList.find(pair.first) == m_WaitingList.end()) &&
-			    (!sons_->ExistsInChildren(pair.first)) &&
-			    (!sons_->ExistsInParent(pair.first))
+		for (const auto& [id, robot]: sons_->neighbors_mapRobot_) {
+			if ((m_WaitingList.find(id) == m_WaitingList.end()) &&
+			    (!sons_->ExistsInChildren(id)) &&
+			    (!sons_->ExistsInParent(id))
 			   ){
 				// Recruit the robot
-				sons_->Recruit(pair.first);
+				sons_->Recruit(id);
 			}
 		}
 	};
@@ -241,9 +240,9 @@ namespace SoNSLib {
 	}
 
 	void SoNSConnector::UpdateSoNSID() {
-		for (auto& pair : sons_->children_mapRobotP_) {
+		for (const auto& [id, robotp] : sons_->children_mapRobotP_) {
 			sons_->messager_.sendCommand(
-				pair.first,
+				id,
 				CMessager::CommandType::UPDATE,
 				generateRecruitMessage(
 					sons_->sonsId_str_,
@@ -251,9 +250,9 @@ namespace SoNSLib {
 				)
 			);
 		}
-		for (const auto& pair : m_WaitingList) {
+		for (const auto& [id, robot] : m_WaitingList) {
 			sons_->messager_.sendCommand(
-				pair.first,
+				id,
 				CMessager::CommandType::UPDATE,
 				generateRecruitMessage(
 					sons_->sonsId_str_,
@@ -279,9 +278,9 @@ namespace SoNSLib {
 	vector<uint8_t> SoNSConnector::generateBranchQualities(const map<string, double>& _branchQualities) {
 		vector<uint8_t> content;
 		CMessager::pushUint16(content, _branchQualities.size());
-		for (const auto& pair : _branchQualities) {
-			CMessager::pushString(content, pair.first);
-			CMessager::pushDouble(content, pair.second);
+		for (const auto& [id, quality] : _branchQualities) {
+			CMessager::pushString(content, id);
+			CMessager::pushDouble(content, quality);
 		}
 		return content;
 	}

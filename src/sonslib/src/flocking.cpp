@@ -29,7 +29,7 @@ namespace SoNSLib {
 
 		double threshold = 5;
 		double speed_scalar = 0.05;
-		int k = 5; // 设置k值，表示只考虑最近的k个邻居
+		int k = 3; // 设置k值，表示只考虑最近的k个邻居
 		sons_->outputVelocity_ = CVector3(0, 0, 0);
 
 		// 只对前k个邻居进行计算
@@ -43,6 +43,7 @@ namespace SoNSLib {
 			} else {
 				sons_->outputVelocity_ -= normalized_pos * speed_scalar * (threshold - dis);
 			}
+			sons_->arrows_.emplace_back(SoNSArrow::Color::YELLOW, pos);
 			count++;
 		}
 	}

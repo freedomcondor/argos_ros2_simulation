@@ -114,9 +114,7 @@ public:
 		// functions -------------------------------------------------------------
 		// construct neighbours
 		vector<SoNSRobot> neighbours;
-		for (const auto& swarmPose : m_SwarmPoses) {
-			const string& id = swarmPose.first;
-			const CTransform& pose = swarmPose.second;
+		for (const auto& [id, pose]: m_SwarmPoses) {
 			neighbours.emplace_back(id, "drone", pose);
 		}
 		// run step

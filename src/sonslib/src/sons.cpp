@@ -79,6 +79,8 @@ namespace SoNSLib {
 		const vector<struct SoNSMessage>& receivedMessages
 	) {
 		log_.str("");
+		arrows_.clear();
+
 		log_ << endl << "-------------------------------------------------------------------" << endl; // 记录信息
 		log_ << "---I am " << myId_str_ << ", I belong to " << sonsId_str_ << ", My quality is " << sonsQuality_f_ << "------------------------------------" << endl; // 记录信息
 
@@ -89,8 +91,8 @@ namespace SoNSLib {
 			log_ << messager_.printCmd(message.binary, "\t\t");
 		}
 		log_ << "\tneighbours : ----------------------" << endl;
-		for (auto& pair : neighbors_mapRobot_) {
-			log_ << "\t\t" << pair.first << endl;
+		for (const auto& [id, robot] : neighbors_mapRobot_) {
+			log_ << "\t\t" << id << endl;
 		}
 
 		//--------------------------------------------------------------
@@ -108,37 +110,40 @@ namespace SoNSLib {
 		log_ << "\tparent : --------" << endl;
 		if (parent_RobotP_ != nullptr) log_ << "\t\t" << parent_RobotP_->id << " " << parent_RobotP_->heartbeatCD << endl;
 		log_ << "\tchildren : ----------------------" << endl;
-		for (auto& pair : children_mapRobotP_) {
-			log_ << "\t\t" << pair.first << " " << pair.second->heartbeatCD << endl;
+		for (const auto& [id, robotP] : children_mapRobotP_) {
+			log_ << "\t\t" << id << " " << robotP->heartbeatCD << endl;
 		}
 		log_ << "\twaiting list: ----------------------" << endl;
-		for (auto& pair : sonsConnector.m_WaitingList) {
-			log_ << "\t\t" << pair.first << "\t " << pair.second.waitingTimeCountDown << endl;
+		for (const auto& [id, robot] : sonsConnector.m_WaitingList) {
+			log_ << "\t\t" << id << "\t " << robot.waitingTimeCountDown << endl;
 		}
 		log_ << "\tbranch qualities: ----------------------" << endl;
-		for (const auto& pair : sonsConnector.branchQualities_) {
-			log_ << "\t\t" << pair.first << "\t" << pair.second << endl;
+		for (const auto& [id, number]: sonsConnector.branchQualities_) {
+			log_ << "\t\t" << id << "\t" << number << endl;
 		}
 		log_<< "\tvelocity : " << outputVelocity_ << endl;
 
-		SoNSStepResult result;
-		map<string, vector<uint8_t>> messageMap = messager_.combineCommands();
-		for (auto& pair : messageMap) result.messages.push_back({pair.first, pair.second});
-		result.log = log_.str(); // 将ostringstream转换为string
-		result.outputVelocity = outputVelocity_;
-
-		for (const auto& message : result.messages) {
-			log_ << "\tSending : " << message.id << ", " << messager_.printHex(message.binary) << endl;
-		}
-
-		for (const auto& neighbour : neighbors_mapRobot_) {
-			result.drawArrows.emplace_back(SoNSArrow::Color::BLUE, neighbour.second.GetPosition());
-		}
 		/*
-		for (const auto& neighbour : children_mapRobotP_) {
-			result.drawArrows.emplace_back(SoNSArrow::Color::RED, neighbour.second->GetPosition());
+		for (const auto& neighbour : neighbors_mapRobot_) {
+			arrows_.emplace_back(SoNSArrow::Color::BLUE, neighbour.second.GetPosition());
 		}
 		*/
+		for (const auto& neighbour : children_mapRobotP_) {
+			arrows_.emplace_back(SoNSArrow::Color::RED, neighbour.second->GetPosition());
+		}
+
+		map<string, vector<uint8_t>> messageMap = messager_.combineCommands();
+		log_ << "\tSending : ----------------------" << endl;
+		for (auto& [id, binary]: messageMap) {
+			log_ << "\tSending : " << id << ", " << messager_.printHex(binary) << endl;
+			log_ << messager_.printCmd(binary, "\t\t");
+		}
+
+		SoNSStepResult result;
+		for (const auto& [id, binary] : messageMap) result.messages.push_back({id, binary});
+		result.log = log_.str(); // 将ostringstream转换为string
+		result.drawArrows = arrows_;
+		result.outputVelocity = outputVelocity_;
 		return result;
 	}
 
