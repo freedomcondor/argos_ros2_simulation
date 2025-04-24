@@ -99,7 +99,7 @@ namespace SoNSLib {
 		messager_.OrganizeReceivedCommands(receivedMessages);
 		UpdateNeighbors(perceivedNeighbors, time);
 
-		sonsConnector.Step(time);
+		//sonsConnector.Step(time);
 		for (auto& module : modules_) {
 			module->Step();
 		}
@@ -127,14 +127,14 @@ namespace SoNSLib {
 			log_ << "\tSending : " << message.id << ", " << messager_.printHex(message.binary) << endl;
 		}
 
-		/*
 		for (const auto& neighbour : neighbors_mapRobot_) {
 			result.drawArrows.emplace_back(SoNSArrow::Color::BLUE, neighbour.second.GetPosition());
 		}
-		*/
+		/*
 		for (const auto& neighbour : children_mapRobotP_) {
 			result.drawArrows.emplace_back(SoNSArrow::Color::RED, neighbour.second->GetPosition());
 		}
+		*/
 		return result;
 	}
 

@@ -65,7 +65,7 @@ import random
 # Set up random positions within reasonable bounds
 x_range = (-10, 10)  # meters
 y_range = (-10, 10)  # meters
-z_range = (2, 8)     # meters
+z_range = (10, 30)     # meters
 th_range = (-180, 180) # degrees
 
 p = []

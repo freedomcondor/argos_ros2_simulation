@@ -28,7 +28,7 @@ namespace SoNSLib {
 		);
 
 		double threshold = 5;
-		double speed_scalar = 0.1;
+		double speed_scalar = 0.05;
 		int k = 5; // 设置k值，表示只考虑最近的k个邻居
 		sons_->outputVelocity_ = CVector3(0, 0, 0);
 
@@ -37,12 +37,11 @@ namespace SoNSLib {
 		for (const auto& pos : sorted_neighbors) {
 			if (count >= k) break; // 超过k个邻居则停止
 			CVector3 normalized_pos = pos;
-			normalized_pos.Normalize();
 			double dis = pos.Length();
 			if (dis > threshold) {
-				sons_->outputVelocity_ += normalized_pos * speed_scalar * dis;
+				sons_->outputVelocity_ += normalized_pos * speed_scalar * (dis - threshold);
 			} else {
-				sons_->outputVelocity_ -= normalized_pos * speed_scalar * dis;
+				sons_->outputVelocity_ -= normalized_pos * speed_scalar * (threshold - dis);
 			}
 			count++;
 		}
