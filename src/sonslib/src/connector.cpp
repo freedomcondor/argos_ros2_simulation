@@ -91,9 +91,15 @@ namespace SoNSLib {
 				string his_sonsId;
 				double his_sonsQuality;
 				parseRecruitMessage(command.binary, index, his_sonsId, his_sonsQuality);
-				sons_->sonsId_str_ = his_sonsId;
-				sons_->sonsQuality_f_ = his_sonsQuality;
-				UpdateSoNSID();
+				// prevent loop
+				if (his_sonsId == sons_->myId_str_) {
+					sons_->RemoveWithUpdate(fromId);
+				}
+				else {
+					sons_->sonsId_str_ = his_sonsId;
+					sons_->sonsQuality_f_ = his_sonsQuality;
+					UpdateSoNSID();
+				}
 			}
 		}
 
@@ -217,6 +223,16 @@ namespace SoNSLib {
 	void SoNSConnector::UpdateSoNSID() {
 		lockCD = (sons_->depth_ + 2) * sons_->step_time_;
 		for (auto& pair : sons_->children_mapRobotP_) {
+			sons_->messager_.sendCommand(
+				pair.first,
+				CMessager::CommandType::UPDATE,
+				generateRecruitMessage(
+					sons_->sonsId_str_,
+					sons_->sonsQuality_f_
+				)
+			);
+		}
+		for (auto& pair : m_WaitingList) {
 			sons_->messager_.sendCommand(
 				pair.first,
 				CMessager::CommandType::UPDATE,
