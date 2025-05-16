@@ -14,6 +14,7 @@ using namespace swarmMathLib;
 #include "module.h"
 #include "messager.h"
 #include "connector.h"
+#include "scaleManager.h"
 
 namespace SoNSLib {
 	//- structs ---------------------------------------------------------------------------------------------
@@ -29,6 +30,10 @@ namespace SoNSLib {
 		string type;
 		double heartbeatCD;
 		double seenCD;
+
+		map<string, uint16_t> scale;
+		uint16_t depth;
+
 		CTransform transform;
 		CVector3 GetPosition() const {return transform.m_Position;}
 		CQuaternion GetOrientation() const {return transform.m_Orientation;}
@@ -81,11 +86,15 @@ namespace SoNSLib {
 
 		// sons data
 		public:
+			double step_time_;
 			// ids
 			string myId_str_;
 			string myType_str_;
 			string sonsId_str_;
 			double sonsQuality_f_;
+
+			map<string, uint16_t> scale_;
+			uint16_t depth_;
 
 			// neighbours
 			map<string, SoNSRobot> neighbors_mapRobot_;
@@ -103,6 +112,7 @@ namespace SoNSLib {
 
 			// modules
 			SoNSConnector sonsConnector;
+			SoNSScaleManager sonsScaleManager;
 
 		private:
 			std::vector<std::shared_ptr<SoNSModule>> modules_;

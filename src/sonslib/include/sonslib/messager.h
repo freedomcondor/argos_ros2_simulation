@@ -32,6 +32,7 @@ namespace SoNSLib {
 			UPDATE,
 			BREAK,
 			HEARTBEAT,
+			SCALE,
 		};
 
 		struct Command {

@@ -14,8 +14,9 @@ using std::map;
 
 namespace SoNSLib {
 
-	SoNS::SoNS() : sonsConnector(*this) {
+	SoNS::SoNS() : sonsConnector(*this), sonsScaleManager(*this) {
 		RegisterModule(std::shared_ptr<SoNSConnector>(&sonsConnector, [](SoNSConnector*){}));
+		RegisterModule(std::shared_ptr<SoNSScaleManager>(&sonsScaleManager, [](SoNSScaleManager*){}));
 	}
 
 	void SoNS::Init(string _myId, string _myType) {
@@ -80,6 +81,8 @@ namespace SoNSLib {
 		log_ << endl << "-------------------------------------------------------------------" << endl; // 记录信息
 		log_ << "---I am " << myId_str_ << ", I belong to " << sonsId_str_ << ", My quality is " << sonsQuality_f_ << "------------------------------------" << endl; // 记录信息
 
+		step_time_ = time;
+
 		log_ << "--- raw input --------" << endl;
 		//- debug print raw messages ---------------------------------------------
 		for (const auto& message : receivedMessages) {
@@ -98,6 +101,7 @@ namespace SoNSLib {
 		UpdateNeighbors(perceivedNeighbors, time);
 
 		sonsConnector.Step(time);
+		sonsScaleManager.Step(time);
 		/*
 		for (auto& module : modules_) {
 			module->Step(time, log);
@@ -111,6 +115,12 @@ namespace SoNSLib {
 		for (auto& pair : children_mapRobotP_) {
 			log_ << "\t\t" << pair.first << " " << pair.second->heartbeatCD << endl;
 		}
+		log_ << "\tscale : --------" << endl;
+		for (const auto& [key, value]: scale_) {
+			log_ << "\t\t" << key << " " << value << endl;
+		}
+		log_ << "\tdepth : --------" << depth_ << endl;
+
 		log_ << "\twaiting list: ----------------------" << endl;
 		for (auto& pair : sonsConnector.m_WaitingList) {
 			log_ << "\t\t" << pair.first << "\t " << pair.second.waitingTimeCountDown << endl;

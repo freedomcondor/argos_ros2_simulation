@@ -22,7 +22,7 @@ namespace SoNSLib {
 	void SoNSConnector::Step(double time) {
 		sons_->log_ << "-- recruitor -----------------------" << endl;
 		sons_->log_ << "\tlockCD = " << lockCD << std::endl;
-		if (lockCD > 0) lockCD -= time;
+		if (lockCD >= 0) lockCD -= time;
 		UpdateWaitingList(time);
 
 		// check heartbeat
@@ -215,7 +215,7 @@ namespace SoNSLib {
 	}
 
 	void SoNSConnector::UpdateSoNSID() {
-		lockCD = 5;
+		lockCD = (sons_->depth_ + 2) * sons_->step_time_;
 		for (auto& pair : sons_->children_mapRobotP_) {
 			sons_->messager_.sendCommand(
 				pair.first,

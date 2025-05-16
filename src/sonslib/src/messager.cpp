@@ -45,6 +45,8 @@ namespace SoNSLib {
 				return "BREAK";
 			case CommandType::HEARTBEAT:
 				return "HEARTBEAT";
+			case CommandType::SCALE:
+				return "SCALE";
 			default:
 				return "UNKNOWN";
 		}
@@ -72,6 +74,17 @@ namespace SoNSLib {
 				case CommandType::ACKNOWLEDGEMENT: break;
 				case CommandType::BREAK:           break;
 				case CommandType::HEARTBEAT:       break;
+				case CommandType::SCALE:
+					{
+						cmdlog << "<depth> = " << parseUint16(cmd, contentI) << " ";
+						uint16_t size = parseUint16(cmd, contentI);
+						cmdlog << "<scale> = " << size << " ";
+						for (int i = 0; i < size; i++) {
+							cmdlog << parseString(cmd, contentI) << " "
+								<< parseUint16(cmd, contentI);
+						}
+					}
+					break;
 				default:  break;
 			}
 
