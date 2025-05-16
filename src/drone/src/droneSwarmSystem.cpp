@@ -14,6 +14,7 @@ using std::map;
 
 #include "drone/msg/pose_sharing.hpp"
 #include "drone/msg/message.hpp"
+#include "drone/msg/debug.hpp"
 
 #include "mathlib/math/vector3.h"
 #include "mathlib/math/transform.h"
@@ -85,6 +86,10 @@ public:
 
 		m_drawArrowPublisher =
 			this->create_publisher<geometry_msgs::msg::Pose>("/drawArrows", 10);
+		m_drawRingPublisher =
+			this->create_publisher<geometry_msgs::msg::Pose>("/drawRings", 10);
+		m_debugPublisher =
+			this->create_publisher<drone::msg::Debug>("/debug", 10);
 
 		// Subscribe to simuTick topic to start timer on first signal
 		m_SimuTickSubscriber = this->create_subscription<std_msgs::msg::Empty>("/simuTick", 10,
@@ -136,6 +141,18 @@ public:
 		for (const auto& arrow: result.drawArrows) {
 			drawArrow(CVector3(), arrow.arrow, arrow.color);
 		}
+		// drawRings
+		for (const auto& ring: result.drawRings) {
+			drawRing(ring.middle, ring.radius, ring.color);
+		}
+		// Debug Msg
+		drone::msg::Debug debug;
+		debug.quality = result.debugMessage.quality;
+		debug.id = m_strMyID;
+		debug.middle.x = m_CurrentTransform.m_Position.GetX();
+		debug.middle.y = m_CurrentTransform.m_Position.GetY();
+		debug.middle.z = m_CurrentTransform.m_Position.GetZ();
+		m_debugPublisher->publish(debug);
 	}
 
 	//------------------------------------------------------------------------------
@@ -183,6 +200,26 @@ public:
 		}
 
 		m_drawArrowPublisher->publish(arrow);
+	}
+
+	void drawRing(CVector3 middle, double radius, SoNSRing::Color color) {
+		middle = m_CurrentTransform * middle;
+		geometry_msgs::msg::Pose ring;
+		ring.position.x = middle.GetX();
+		ring.position.y = middle.GetY();
+		ring.position.z = middle.GetZ();
+		ring.orientation.x = radius;
+
+		switch (color) {
+			case SoNSRing::Color::RED:    ring.orientation.w = 0; break;
+			case SoNSRing::Color::GREEN:  ring.orientation.w = 1; break;
+			case SoNSRing::Color::BLUE:   ring.orientation.w = 2; break;
+			case SoNSRing::Color::YELLOW: ring.orientation.w = 3; break;
+			case SoNSRing::Color::BLACK:  ring.orientation.w = 4; break;
+			default:                      ring.orientation.w = 5; break;
+		}
+
+		m_drawRingPublisher->publish(ring);
 	}
 
 	void setVelocity(CVector3 v) {
@@ -246,6 +283,9 @@ private:
 	rclcpp::Publisher<drone::msg::PoseSharing>::SharedPtr m_PoseSharingPublisher;
 
 	rclcpp::Publisher<geometry_msgs::msg::Pose>::SharedPtr m_drawArrowPublisher;
+	rclcpp::Publisher<geometry_msgs::msg::Pose>::SharedPtr m_drawRingPublisher;
+	rclcpp::Publisher<drone::msg::Debug>::SharedPtr m_debugPublisher;
+
 	rclcpp::Subscription<std_msgs::msg::Empty>::SharedPtr m_SimuTickSubscriber;
 
 	rclcpp::TimerBase::SharedPtr m_Timer; // 定时器

@@ -29,6 +29,7 @@ find_package(rosidl_default_generators REQUIRED)
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/PoseSharing.msg"
   "msg/Message.msg"
+  "msg/Debug.msg"
   DEPENDENCIES geometry_msgs std_msgs
 )
 ament_export_dependencies(rosidl_default_runtime)
@@ -42,11 +43,21 @@ ament_target_dependencies(droneSwarmSystem
   sonslib
 )
 
+add_executable(debugNode src/debug.cpp)
+ament_target_dependencies(debugNode
+  rclcpp
+  std_msgs
+  geometry_msgs
+  mathlib
+)
+
 rosidl_get_typesupport_target(cpp_typesupport_target
   ${PROJECT_NAME} rosidl_typesupport_cpp)
 target_link_libraries(droneSwarmSystem "${cpp_typesupport_target}")
+target_link_libraries(debugNode        "${cpp_typesupport_target}")
 
 install(TARGETS   droneSwarmSystem  DESTINATION lib/${PROJECT_NAME})
+install(TARGETS   debugNode         DESTINATION lib/${PROJECT_NAME})
 install(DIRECTORY launch/  DESTINATION share/${PROJECT_NAME}/launch)
 
 install(

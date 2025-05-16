@@ -143,6 +143,13 @@ namespace SoNSLib {
 		for (const auto& neighbour : children_mapRobotP_) {
 			result.drawArrows.emplace_back(SoNSArrow::Color::RED, neighbour.second->GetPosition());
 		}
+		if (parent_RobotP_ == nullptr)
+			result.drawRings.emplace_back(SoNSRing::Color::RED, CVector3(0,0,0), 0.5);
+
+		struct SoNSDebug debugMessage;
+		debugMessage.quality = sonsQuality_f_;
+		result.debugMessage = debugMessage;
+
 		return result;
 	}
 

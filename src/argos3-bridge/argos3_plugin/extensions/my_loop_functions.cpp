@@ -12,9 +12,13 @@ namespace argos {
       }
       m_LoopFunctionRos2NodeHandle = std::make_shared<rclcpp::Node>("argos_loop_function_node");
 		m_pSimuTick = m_LoopFunctionRos2NodeHandle->create_publisher<std_msgs::msg::Empty>("/simuTick", 10);
-      m_debugActuatorSubscriber = m_LoopFunctionRos2NodeHandle->create_subscription<geometry_msgs::msg::Pose>(
+      m_debugDrawArrowSubscriber = m_LoopFunctionRos2NodeHandle->create_subscription<geometry_msgs::msg::Pose>(
          "/drawArrows", 1000,
-         std::bind(&CMyLoopFunctions::debugActuatorCallback, this, std::placeholders::_1)
+         std::bind(&CMyLoopFunctions::debugDrawArrowCallback, this, std::placeholders::_1)
+      );
+      m_debugDrawRingSubscriber = m_LoopFunctionRos2NodeHandle->create_subscription<geometry_msgs::msg::Pose>(
+         "/drawRings", 1000,
+         std::bind(&CMyLoopFunctions::debugDrawRingCallback, this, std::placeholders::_1)
       );
 
       /* debug entity for arrow draw */
@@ -24,6 +28,7 @@ namespace argos {
       m_pDebugEntity->GetArrows().emplace_back(CVector3(0,0,0), CVector3(2,0,0), CColor::RED);
       m_pDebugEntity->GetArrows().emplace_back(CVector3(0,0,0), CVector3(0,1,0), CColor::GREEN);
       m_pDebugEntity->GetArrows().emplace_back(CVector3(0,0,0), CVector3(0,0,1), CColor::BLACK);
+      //m_pDebugEntity->GetRings().emplace_back(CVector3(0,0,0.0), 1, CColor::BLACK);
    }
 
    /****************************************/
@@ -31,6 +36,12 @@ namespace argos {
 
    void CMyLoopFunctions::PreStep() {
       m_pDebugEntity->GetArrows().clear();
+      m_pDebugEntity->GetRings().clear();
+
+      m_pDebugEntity->GetArrows().emplace_back(CVector3(0,0,0), CVector3(2,0,0), CColor::RED);
+      m_pDebugEntity->GetArrows().emplace_back(CVector3(0,0,0), CVector3(0,1,0), CColor::GREEN);
+      m_pDebugEntity->GetArrows().emplace_back(CVector3(0,0,0), CVector3(0,0,1), CColor::BLACK);
+      //m_pDebugEntity->GetRings().emplace_back(CVector3(0,0,0.0), 1, CColor::BLACK);
 
       std_msgs::msg::Empty msg;
       m_pSimuTick->publish(msg);
@@ -54,7 +65,7 @@ namespace argos {
    /****************************************/
    /****************************************/
 
-   void CMyLoopFunctions::debugActuatorCallback(const geometry_msgs::msg::Pose::SharedPtr pose) {
+   void CMyLoopFunctions::debugDrawArrowCallback(const geometry_msgs::msg::Pose::SharedPtr pose) {
       CVector3 from = CVector3(
          pose->position.x,
          pose->position.y,
@@ -77,6 +88,27 @@ namespace argos {
       }
 
       m_pDebugEntity->GetArrows().emplace_back(from, to, color);
+   }
+
+   void CMyLoopFunctions::debugDrawRingCallback(const geometry_msgs::msg::Pose::SharedPtr pose) {
+      CVector3 middle = CVector3(
+         pose->position.x,
+         pose->position.y,
+         pose->position.z
+      );
+      double radius = pose->orientation.x;
+
+      CColor color;
+      switch ((int)pose->orientation.w) {
+         case 0:  color = CColor::RED;    break;
+         case 1:  color = CColor::GREEN;  break;
+         case 2:  color = CColor::BLUE;   break;
+         case 3:  color = CColor::YELLOW; break;
+         case 4:  color = CColor::BLACK;  break;
+         default: color = CColor::WHITE; break;
+      }
+
+      m_pDebugEntity->GetRings().emplace_back(middle, radius, color);
    }
 
    /****************************************/

@@ -35,8 +35,10 @@ namespace argos {
    private:
       CDebugEntity* m_pDebugEntity;
       rclcpp::Node::SharedPtr m_LoopFunctionRos2NodeHandle;
-      rclcpp::Subscription<geometry_msgs::msg::Pose>::SharedPtr m_debugActuatorSubscriber;
-      void debugActuatorCallback(const geometry_msgs::msg::Pose::SharedPtr pose);
+      rclcpp::Subscription<geometry_msgs::msg::Pose>::SharedPtr m_debugDrawArrowSubscriber;
+      rclcpp::Subscription<geometry_msgs::msg::Pose>::SharedPtr m_debugDrawRingSubscriber;
+      void debugDrawArrowCallback(const geometry_msgs::msg::Pose::SharedPtr pose);
+      void debugDrawRingCallback(const geometry_msgs::msg::Pose::SharedPtr pose);
 
       rclcpp::Publisher<std_msgs::msg::Empty>::SharedPtr m_pSimuTick;
    };

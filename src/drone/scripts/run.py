@@ -84,4 +84,5 @@ argos_replacements = [
 generate_file(argos_template, argos_target, argos_replacements)
 
 import os
+os.system("mv ~/.ros/log ~/.ros/log_history_$(date +%s)")
 os.system("ros2 launch drone drone_launch.xml")

@@ -3,6 +3,7 @@
 
     DRONES
 
+    <node name="debugNode" pkg="drone" exec="debugNode" output="log" />
     <node name="monitor" pkg="rqt_gui" exec="rqt_gui" />
 
 </launch> 

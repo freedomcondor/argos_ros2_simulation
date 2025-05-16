@@ -54,10 +54,24 @@ namespace SoNSLib {
 		SoNSArrow(Color _color, const CVector3& _arrow):color(_color),arrow(_arrow) {}
 	};
 
+	struct SoNSRing{
+		enum Color { RED, GREEN, BLUE, YELLOW, BLACK, WHITE };
+		Color color;
+		CVector3 middle;
+		double radius;
+		SoNSRing(Color _color, const CVector3& _middle, double _radius):color(_color),middle(_middle),radius(_radius) {}
+	};
+
+	struct SoNSDebug{
+		double quality;
+	};
+
 	struct SoNSStepResult {
 		CVector3 outputVelocity;
 		vector<SoNSMessage> messages;
 		vector<SoNSArrow> drawArrows;
+		vector<SoNSRing> drawRings;
+		struct SoNSDebug debugMessage;
 		string log;
 	};
 
