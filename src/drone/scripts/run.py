@@ -49,7 +49,7 @@ def generate_drone_argos_xml(drone_name, x, y, z, th) :
 
 #----------------------------------------------------------------------------
 #----------------------------------------------------------------------------
-N = 20
+N = 50
 
 drones_launch_xml = ""
 for i in range(1, N+1):
@@ -84,5 +84,5 @@ argos_replacements = [
 generate_file(argos_template, argos_target, argos_replacements)
 
 import os
-os.system("mv ~/.ros/log ~/.ros/log_history_$(date +%s)")
+os.system("mv ~/.ros/log ~/.ros/log_history_$(date '+%Y%m%d_%H%M%S')")
 os.system("ros2 launch drone drone_launch.xml")

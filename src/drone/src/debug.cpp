@@ -86,9 +86,25 @@ public:
 			}
 		}
 		
-		//如果m_color_index中只有一个值而且大于4时,把这个quality对应的值变成0
-		if (m_color_index.size() == 1 && m_color_index.begin()->second > 4) {
-			m_color_index.begin()->second = 0;
+		//如果m_color_index中有大于4的值,而且里面值的总种类少于5种，则把其中大与4的值改成一个空闲的小于4的值
+		if (m_color_index.size() <= 5) {
+			for (auto [quality, color] : m_color_index) {
+				if (color > 4) {
+					for (uint16_t i = 0; i < 5; ++i) {
+						bool used = false;
+						for (const auto [_, color2] : m_color_index) {
+							if (color2 == i) {
+								used = true;
+								break;
+							}
+						}
+						if (used == false) {
+							m_color_index[quality] = i;
+							break;
+						}
+					}
+				}
+			}
 		}
 
 		// 输出调试信息

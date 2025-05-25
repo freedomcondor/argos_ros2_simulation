@@ -103,6 +103,22 @@ namespace SoNSLib {
 			}
 		}
 
+		// Send heartbeat to parent and all children
+		if (sons_->parent_RobotP_ != nullptr) {
+			sons_->messager_.sendCommand(
+				sons_->parent_RobotP_->id,
+				CMessager::CommandType::HEARTBEAT,
+				{}
+			);
+		}
+		for (auto& pair : sons_->children_mapRobotP_) {
+			sons_->messager_.sendCommand(
+				pair.first,
+				CMessager::CommandType::HEARTBEAT,
+				{}
+			);
+		}
+
 		// check recruit messages
 		string bestFromId;
 		string bestSonsId;
@@ -146,21 +162,6 @@ namespace SoNSLib {
 			UpdateSoNSID();
 		}
 
-		// Send heartbeat to parent and all children
-		if (sons_->parent_RobotP_ != nullptr) {
-			sons_->messager_.sendCommand(
-				sons_->parent_RobotP_->id,
-				CMessager::CommandType::HEARTBEAT,
-				{}
-			);
-		}
-		for (auto& pair : sons_->children_mapRobotP_) {
-			sons_->messager_.sendCommand(
-				pair.first,
-				CMessager::CommandType::HEARTBEAT,
-				{}
-			);
-		}
 		// recruit all
 		for (auto& pair : sons_->neighbors_mapRobot_) {
 			if ((m_WaitingList.find(pair.first) == m_WaitingList.end()) &&
@@ -221,7 +222,7 @@ namespace SoNSLib {
 	}
 
 	void SoNSConnector::UpdateSoNSID() {
-		lockCD = (sons_->depth_ + 2) * sons_->step_time_;
+		lockCD = (sons_->depth_ * 2 + 2) * sons_->step_time_;
 		for (auto& pair : sons_->children_mapRobotP_) {
 			sons_->messager_.sendCommand(
 				pair.first,

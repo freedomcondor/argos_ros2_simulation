@@ -19,8 +19,8 @@ using namespace swarmMathLib;
 namespace SoNSLib {
 	//- structs ---------------------------------------------------------------------------------------------
 	struct SoNSParameters {
-		double seenCDTime = 3;
-		double heartbeatCDTime = 3;
+		double seenCDTime = 1;
+		double heartbeatCDTime = 1;
 		double recruitWaitingTime = 1;
 	};
 

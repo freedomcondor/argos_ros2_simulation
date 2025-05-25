@@ -46,7 +46,7 @@ public:
 			}
 		);
 
-		m_SwarmCommunicationSubscriber = this->create_subscription<drone::msg::Message>("communication", 10,
+		m_SwarmCommunicationSubscriber = this->create_subscription<drone::msg::Message>("communication", 2000,
 			[this](const drone::msg::Message::SharedPtr msg) -> void {
 				struct SoNSMessage sonsMsg;
 				sonsMsg.id = msg->id; // Set the ID from the received message
@@ -58,12 +58,12 @@ public:
 
 		// declare position sharing publisher and subscriber
 		m_PoseSharingPublisher =
-			this->create_publisher<drone::msg::PoseSharing>("/poseSharing", 10);
+			this->create_publisher<drone::msg::PoseSharing>("/poseSharing", 1000);
 
 		this->declare_parameter("distance_threshold", 10.0);
 		this->declare_parameter("target_distance", 3.0);
 
-		m_PoseSharingSubscriber = this->create_subscription<drone::msg::PoseSharing>("/poseSharing", 10,
+		m_PoseSharingSubscriber = this->create_subscription<drone::msg::PoseSharing>("/poseSharing", 1000,
 			[this](const drone::msg::PoseSharing::SharedPtr msg) -> void{
 				if (msg->id == m_strMyID) return;
 
@@ -74,7 +74,7 @@ public:
 				if ((neighbour.m_Position - m_CurrentTransform.m_Position).Length() < distanceThreshold) {
 					m_SwarmPoses[msg->id] = neighbour - m_CurrentTransform;
 					if (m_SwarmCommunicationPublishers.find(msg->id) == m_SwarmCommunicationPublishers.end()) {
-						m_SwarmCommunicationPublishers[msg->id] = this->create_publisher<drone::msg::Message>("/" + msg->id + "/communication", 10);
+						m_SwarmCommunicationPublishers[msg->id] = this->create_publisher<drone::msg::Message>("/" + msg->id + "/communication", 2000);
 					}
 				}
 				else {
@@ -85,11 +85,11 @@ public:
 		);
 
 		m_drawArrowPublisher =
-			this->create_publisher<geometry_msgs::msg::Pose>("/drawArrows", 10);
+			this->create_publisher<geometry_msgs::msg::Pose>("/drawArrows", 100);
 		m_drawRingPublisher =
-			this->create_publisher<geometry_msgs::msg::Pose>("/drawRings", 10);
+			this->create_publisher<geometry_msgs::msg::Pose>("/drawRings", 100);
 		m_debugPublisher =
-			this->create_publisher<drone::msg::Debug>("/debug", 10);
+			this->create_publisher<drone::msg::Debug>("/debug", 100);
 
 		// Subscribe to simuTick topic to start timer on first signal
 		m_SimuTickSubscriber = this->create_subscription<std_msgs::msg::Empty>("/simuTick", 10,
