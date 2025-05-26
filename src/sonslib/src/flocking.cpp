@@ -9,7 +9,7 @@ using namespace swarmMathLib;
 
 namespace SoNSLib {
 
-	void SoNSFlocking::Step() {
+	void SoNSFlocking::Step(double time) {
 		// 将邻居按距离排序
 		std::vector<CVector3> sorted_neighbors;
 		for (const auto& it : sons_->neighbors_mapRobot_) {
@@ -45,7 +45,7 @@ namespace SoNSLib {
 			}
 			CVector3 arrow = pos - CVector3(pos).Normalize() * 0.3;
 			if (pos.Length() < 0.3) arrow = pos * 0.7;
-			sons_->arrows_.emplace_back(SoNSArrow::Color::YELLOW, arrow);
+			//sons_->arrows_.emplace_back(SoNSArrow::Color::YELLOW, arrow);
 			count++;
 		}
 	}

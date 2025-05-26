@@ -11,9 +11,11 @@ using std::vector;
 #include "mathlib/math/transform.h"
 using namespace swarmMathLib;
 
-#include "module.h"
 #include "messager.h"
+
+#include "module.h"
 #include "connector.h"
+#include "assigner.h"
 #include "scaleManager.h"
 #include "flocking.h"
 
@@ -94,6 +96,7 @@ namespace SoNSLib {
 				const vector<struct SoNSMessage>& receivedMessages
 			);
 			void Recruit(string _id);
+			void Assign(string _child_id, string _to_id);
 			void Remove(string _id);
 			void RemoveWithUpdate(string _id);
 
@@ -109,6 +112,10 @@ namespace SoNSLib {
 			string sonsId_str_;
 			double sonsQuality_f_;
 
+			// assigner
+			string assignTo_str_;
+
+			// scale manager
 			map<string, uint16_t> scale_;
 			uint16_t depth_;
 
@@ -132,6 +139,7 @@ namespace SoNSLib {
 
 			// modules
 			SoNSConnector sonsConnector;
+			SoNSAssigner sonsAssigner;
 			SoNSScaleManager sonsScaleManager;
 			SoNSFlocking sonsFlocking;
 

@@ -132,9 +132,14 @@ namespace SoNSLib {
 			double his_sonsQuality;
 			parseRecruitMessage(command.binary, index, his_sonsId, his_sonsQuality);
 			if ((sons_->ExistsInNeighbors(fromId)) &&
-			    (his_sonsId != sons_->sonsId_str_) &&
-			    (his_sonsQuality > bestSonsQuality) &&
-			    (lockCD < 0)
+			    (
+					( (his_sonsId != sons_->sonsId_str_) &&
+					  (his_sonsQuality > bestSonsQuality) &&
+					  (lockCD < 0)
+					)
+					||
+					(fromId == sons_->assignTo_str_)
+				)
 			   ) {
 				bestFromId = fromId;
 				bestSonsId = his_sonsId;
@@ -157,9 +162,14 @@ namespace SoNSLib {
 				bestFromId,
 				CMessager::CommandType::ACKNOWLEDGEMENT, {}
 			);
-			sons_->sonsId_str_ = bestSonsId;
-			sons_->sonsQuality_f_ = bestSonsQuality;
-			UpdateSoNSID();
+
+			if ((sons_->sonsId_str_ != bestSonsId) ||
+			    (sons_->sonsQuality_f_ != bestSonsQuality)
+			) {
+				sons_->sonsId_str_ = bestSonsId;
+				sons_->sonsQuality_f_ = bestSonsQuality;
+				UpdateSoNSID();
+			}
 		}
 
 		// recruit all

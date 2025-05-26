@@ -3,19 +3,21 @@
 #include <iostream>
 using std::cout;
 using std::endl;
-//#include <sstream>
-//#include <algorithm>
 #include <map>
 using std::map;
 
 #include "sons.h"
-//#include "ModuleA.h"
-//#include "ModuleB.h"
 
 namespace SoNSLib {
 
-	SoNS::SoNS() : sonsConnector(*this), sonsScaleManager(*this), sonsFlocking(*this) {
+	SoNS::SoNS() :
+		sonsConnector(*this),
+		sonsAssigner(*this),
+		sonsScaleManager(*this),
+		sonsFlocking(*this)
+	{
 		RegisterModule(std::shared_ptr<SoNSConnector>(&sonsConnector, [](SoNSConnector*){}));
+		RegisterModule(std::shared_ptr<SoNSAssigner>(&sonsAssigner, [](SoNSAssigner*){}));
 		RegisterModule(std::shared_ptr<SoNSScaleManager>(&sonsScaleManager, [](SoNSScaleManager*){}));
 		RegisterModule(std::shared_ptr<SoNSFlocking>(&sonsFlocking, [](SoNSFlocking*){}));
 	}
@@ -31,16 +33,6 @@ namespace SoNSLib {
 
 	void SoNS::RegisterModule(std::shared_ptr<SoNSModule> module) {
 		modules_.push_back(module);
-		
-		// 可选：保存具体模块的引用
-		/*
-		if (auto moduleA = std::dynamic_pointer_cast<ModuleA>(module)) {
-			moduleA_ = moduleA;
-		}
-		if (auto moduleB = std::dynamic_pointer_cast<ModuleB>(module)) {
-			moduleB_ = moduleB;
-		}
-		*/
 	}
 
 	void SoNS::PreStep() {
@@ -58,6 +50,12 @@ namespace SoNSLib {
 	void SoNS::Recruit(string _id) {
 		for (auto& module : modules_) {
 			module->Recruit(_id);
+		}
+	}
+
+	void SoNS::Assign(string _child_id, string _to_id) {
+		for (auto& module : modules_) {
+			module->Assign(_child_id, _to_id);
 		}
 	}
 
@@ -103,14 +101,14 @@ namespace SoNSLib {
 		messager_.OrganizeReceivedCommands(receivedMessages);
 		UpdateNeighbors(perceivedNeighbors, time);
 
-		sonsConnector.Step(time);
-		sonsScaleManager.Step(time);
-		sonsFlocking.Step();
-		/*
 		for (auto& module : modules_) {
-			module->Step(time, log);
+			module->Step(time);
 		}
-		*/
+
+		if (parent_RobotP_ != nullptr) {
+			for (const auto& [id, childp] : children_mapRobotP_)
+				Assign(id, parent_RobotP_->id);
+		}
 
 		log_ << "--- step result --------" << endl;
 		log_ << "\tparent : --------" << endl;
@@ -129,6 +127,8 @@ namespace SoNSLib {
 		for (const auto& [id, robot] : sonsConnector.m_WaitingList) {
 			log_ << "\t\t" << id << "\t " << robot.waitingTimeCountDown << endl;
 		}
+
+		log_ << "\tassign to: ----------------------" << assignTo_str_ << endl;
 
 		SoNSStepResult result;
 		map<string, vector<uint8_t>> messageMap = messager_.combineCommands();

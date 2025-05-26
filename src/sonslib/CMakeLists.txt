@@ -15,6 +15,7 @@ add_library(${PROJECT_NAME}
   src/sons.cpp
   src/messager.cpp
   src/connector.cpp
+  src/assigner.cpp
   src/scaleManager.cpp
   src/flocking.cpp
 )

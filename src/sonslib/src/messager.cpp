@@ -47,6 +47,8 @@ namespace SoNSLib {
 				return "HEARTBEAT";
 			case CommandType::SCALE:
 				return "SCALE";
+			case CommandType::ASSIGN:
+				return "ASSIGN";
 			default:
 				return "UNKNOWN";
 		}
@@ -84,6 +86,9 @@ namespace SoNSLib {
 								<< parseUint16(cmd, contentI);
 						}
 					}
+					break;
+				case CommandType::ASSIGN:
+					cmdlog << parseString(cmd, contentI);
 					break;
 				default:  break;
 			}

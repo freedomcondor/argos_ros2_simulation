@@ -8,7 +8,7 @@ namespace SoNSLib {
 	class SoNSFlocking : public SoNSModule {
 	public:
 		SoNSFlocking(SoNS& sons) : SoNSModule(sons) {}
-		void Step() override;
+		void Step(double time) override;
 	}; // endof class Flocking
 
 } // endof namespace SoNSLib

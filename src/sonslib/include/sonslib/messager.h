@@ -33,6 +33,7 @@ namespace SoNSLib {
 			BREAK,
 			HEARTBEAT,
 			SCALE,
+			ASSIGN,
 		};
 
 		struct Command {
@@ -103,6 +104,9 @@ namespace SoNSLib {
 			}
 			return result;
 		}
+		inline static uint16_t parseUint16(const vector<uint8_t>& _binary) {
+			uint tmp = 0; return parseUint16(_binary, tmp);
+		}
 
 		// double --------------------------------------------------------------
 		inline static void pushDouble(vector<uint8_t>& _binary, double _d) {
@@ -120,6 +124,9 @@ namespace SoNSLib {
 				return 0;
 			}
 		}
+		inline static double parseDouble(const vector<uint8_t>& _binary) {
+			uint tmp = 0; return parseDouble(_binary, tmp);
+		}
 
 		// CVector3 --------------------------------------------------------------
 		inline static void pushCVector3(vector<uint8_t>& _binary, const CVector3& _v) {
@@ -134,6 +141,9 @@ namespace SoNSLib {
 			double Z = parseDouble(_binary, i);
 			return CVector3(X, Y, Z);
 		}
+		inline static CVector3 parseCVector3(const vector<uint8_t>& _binary) {
+			uint tmp = 0; return parseCVector3(_binary, tmp);
+		}
 
 		// String --------------------------------------------------------------
 		void static pushString(vector<uint8_t>& binary, const string& str) {
@@ -147,6 +157,9 @@ namespace SoNSLib {
 			string result(binary.begin() + index, binary.begin() + index + length);
 			index += length; // 更新索引
 			return result;
+		}
+		string static parseString(const vector<uint8_t>& binary) {
+			uint tmp = 0; return parseString(binary, tmp);
 		}
 
 		// member --------------------------------------------------------------
