@@ -15,6 +15,7 @@ using namespace swarmMathLib;
 #include "messager.h"
 #include "connector.h"
 #include "scaleManager.h"
+#include "flocking.h"
 
 namespace SoNSLib {
 	//- structs ---------------------------------------------------------------------------------------------
@@ -22,6 +23,7 @@ namespace SoNSLib {
 		double seenCDTime = 1;
 		double heartbeatCDTime = 1;
 		double recruitWaitingTime = 1;
+		uint16_t maxDepth = 51;
 	};
 
 	struct SoNSRobot {
@@ -118,6 +120,10 @@ namespace SoNSLib {
 			bool ExistsInChildren(string _id) {return children_mapRobotP_.find(_id) != children_mapRobotP_.end();}
 			bool ExistsInParent(string _id) {return parent_RobotP_ != nullptr && parent_RobotP_->id == _id;}
 
+			// outputs
+			CVector3 outputVelocity_;
+			vector<SoNSArrow> arrows_;
+
 			// utils
 			SoNSParameters parameters_;
 			std::ostringstream log_;
@@ -127,6 +133,7 @@ namespace SoNSLib {
 			// modules
 			SoNSConnector sonsConnector;
 			SoNSScaleManager sonsScaleManager;
+			SoNSFlocking sonsFlocking;
 
 		private:
 			std::vector<std::shared_ptr<SoNSModule>> modules_;

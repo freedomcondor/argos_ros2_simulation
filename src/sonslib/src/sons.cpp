@@ -14,9 +14,10 @@ using std::map;
 
 namespace SoNSLib {
 
-	SoNS::SoNS() : sonsConnector(*this), sonsScaleManager(*this) {
+	SoNS::SoNS() : sonsConnector(*this), sonsScaleManager(*this), sonsFlocking(*this) {
 		RegisterModule(std::shared_ptr<SoNSConnector>(&sonsConnector, [](SoNSConnector*){}));
 		RegisterModule(std::shared_ptr<SoNSScaleManager>(&sonsScaleManager, [](SoNSScaleManager*){}));
+		RegisterModule(std::shared_ptr<SoNSFlocking>(&sonsFlocking, [](SoNSFlocking*){}));
 	}
 
 	void SoNS::Init(string _myId, string _myType) {
@@ -78,6 +79,8 @@ namespace SoNSLib {
 		const vector<struct SoNSMessage>& receivedMessages
 	) {
 		log_.str("");
+		arrows_.clear();
+
 		log_ << endl << "-------------------------------------------------------------------" << endl; // 记录信息
 		log_ << "---I am " << myId_str_ << ", I belong to " << sonsId_str_ << ", My quality is " << sonsQuality_f_ << "------------------------------------" << endl; // 记录信息
 
@@ -90,8 +93,8 @@ namespace SoNSLib {
 			log_ << messager_.printCmd(message.binary, "\t\t");
 		}
 		log_ << "\tneighbours : ----------------------" << endl;
-		for (auto& pair : neighbors_mapRobot_) {
-			log_ << "\t\t" << pair.first << endl;
+		for (const auto& [id, robot] : neighbors_mapRobot_) {
+			log_ << "\t\t" << id << endl;
 		}
 
 		//--------------------------------------------------------------
@@ -102,6 +105,7 @@ namespace SoNSLib {
 
 		sonsConnector.Step(time);
 		sonsScaleManager.Step(time);
+		sonsFlocking.Step();
 		/*
 		for (auto& module : modules_) {
 			module->Step(time, log);
@@ -112,8 +116,8 @@ namespace SoNSLib {
 		log_ << "\tparent : --------" << endl;
 		if (parent_RobotP_ != nullptr) log_ << "\t\t" << parent_RobotP_->id << " " << parent_RobotP_->heartbeatCD << endl;
 		log_ << "\tchildren : ----------------------" << endl;
-		for (auto& pair : children_mapRobotP_) {
-			log_ << "\t\t" << pair.first << " " << pair.second->heartbeatCD << endl;
+		for (const auto& [id, robotP] : children_mapRobotP_) {
+			log_ << "\t\t" << id << " " << robotP->heartbeatCD << endl;
 		}
 		log_ << "\tscale : --------" << endl;
 		for (const auto& [key, value]: scale_) {
@@ -122,32 +126,43 @@ namespace SoNSLib {
 		log_ << "\tdepth : --------" << depth_ << endl;
 
 		log_ << "\twaiting list: ----------------------" << endl;
-		for (auto& pair : sonsConnector.m_WaitingList) {
-			log_ << "\t\t" << pair.first << "\t " << pair.second.waitingTimeCountDown << endl;
+		for (const auto& [id, robot] : sonsConnector.m_WaitingList) {
+			log_ << "\t\t" << id << "\t " << robot.waitingTimeCountDown << endl;
 		}
 
 		SoNSStepResult result;
 		map<string, vector<uint8_t>> messageMap = messager_.combineCommands();
 		for (auto& pair : messageMap) result.messages.push_back({pair.first, pair.second});
-		result.log = log_.str(); // 将ostringstream转换为string
-
-		for (const auto& message : result.messages) {
-			log_ << "\tSending : " << message.id << ", " << messager_.printHex(message.binary) << endl;
+		log_ << "\tSending : ----------------------" << endl;
+		for (auto& [id, binary]: messageMap) {
+			log_ << "\tSending : " << id << ", " << messager_.printHex(binary) << endl;
+			log_ << messager_.printCmd(binary, "\t\t");
 		}
 
 		/*
+		for (const auto& message : result.messages) {
+			log_ << "\tSending : " << message.id << ", " << messager_.printHex(message.binary) << endl;
+		}
+		*/
+		log_<< "\tvelocity : " << outputVelocity_ << endl;
+
+		/*
 		for (const auto& neighbour : neighbors_mapRobot_) {
-			result.drawArrows.emplace_back(SoNSArrow::Color::BLUE, neighbour.second.GetPosition());
+			arrows_.emplace_back(SoNSArrow::Color::BLUE, neighbour.second.GetPosition());
 		}
 		*/
 		for (const auto& neighbour : children_mapRobotP_) {
-			result.drawArrows.emplace_back(SoNSArrow::Color::RED, neighbour.second->GetPosition());
+			arrows_.emplace_back(SoNSArrow::Color::RED, neighbour.second->GetPosition());
 		}
 		if (parent_RobotP_ == nullptr)
 			result.drawRings.emplace_back(SoNSRing::Color::RED, CVector3(0,0,0), 0.5);
 
 		struct SoNSDebug debugMessage;
 		debugMessage.quality = sonsQuality_f_;
+
+		result.log = log_.str();
+		result.drawArrows = arrows_;
+		result.outputVelocity = outputVelocity_;
 		result.debugMessage = debugMessage;
 
 		return result;

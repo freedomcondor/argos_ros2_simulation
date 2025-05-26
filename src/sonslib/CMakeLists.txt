@@ -16,6 +16,7 @@ add_library(${PROJECT_NAME}
   src/messager.cpp
   src/connector.cpp
   src/scaleManager.cpp
+  src/flocking.cpp
 )
 
 ament_target_dependencies(${PROJECT_NAME}
