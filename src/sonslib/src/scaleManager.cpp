@@ -18,6 +18,13 @@ namespace SoNSLib {
 					sons_->children_mapRobotP_[fromId]->scale,
 					sons_->children_mapRobotP_[fromId]->depth
 				);
+
+				if (sons_->children_mapRobotP_[fromId]->depth > sons_->parameters_.maxDepth) {
+					sons_->log_ << "ScaleManager: " << fromId << " is too deep" << std::endl;
+					if (sons_->parent_RobotP_ != nullptr) {
+						sons_->RemoveWithUpdate(sons_->parent_RobotP_->id);
+					}
+				}
 			}
 		}
 
