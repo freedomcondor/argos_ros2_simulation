@@ -130,10 +130,11 @@ namespace SoNSLib {
 			// outputs
 			CVector3 outputVelocity_;
 			vector<SoNSArrow> arrows_;
+			vector<SoNSRing> rings_;
+			std::ostringstream log_;
 
 			// utils
 			SoNSParameters parameters_;
-			std::ostringstream log_;
 			CMessager messager_;
 			map<CMessager::CommandType, vector<CMessager::Command>>& GetReceivedCommands() {return messager_.GetReceivedCommands();}
 

@@ -28,10 +28,8 @@ namespace SoNSLib {
 			}
 		}
 
-		// add myself
+		// clear scale and depth for sum
 		sons_->scale_.clear();
-		sons_->scale_[sons_->myType_str_] = 1;
-
 		sons_->depth_ = 0;
 
 		// sum children scale to my scale and depth
@@ -52,12 +50,22 @@ namespace SoNSLib {
 			}
 		}
 
-		// myself depth
+		// add myself depth and scale
 		sons_->depth_++;
+		sons_->scale_[sons_->myType_str_]++;
 
 		//send my scale to my parent
 		if (sons_->parent_RobotP_ != nullptr) {
 			sons_->messager_.sendCommand(sons_->parent_RobotP_->id, CMessager::CommandType::SCALE, generateScaleMessage(sons_->scale_, sons_->depth_));
+		}
+
+		// for debug: draw rings to show number of drones
+		for (uint i = 0; i < sons_->scale_["drone"]; i++) {
+			sons_->rings_.emplace_back(
+				SoNSRing::Color::RED,
+				CVector3(0, 0, 0.2 + i * 0.1),
+				0.1
+			);
 		}
 	}
 

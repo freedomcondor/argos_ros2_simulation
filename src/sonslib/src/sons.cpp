@@ -78,6 +78,7 @@ namespace SoNSLib {
 	) {
 		log_.str("");
 		arrows_.clear();
+		rings_.clear();
 
 		log_ << endl << "-------------------------------------------------------------------" << endl; // 记录信息
 		log_ << "---I am " << myId_str_ << ", I belong to " << sonsId_str_ << ", My quality is " << sonsQuality_f_ << "------------------------------------" << endl; // 记录信息
@@ -155,13 +156,14 @@ namespace SoNSLib {
 			arrows_.emplace_back(SoNSArrow::Color::RED, neighbour.second->GetPosition());
 		}
 		if (parent_RobotP_ == nullptr)
-			result.drawRings.emplace_back(SoNSRing::Color::RED, CVector3(0,0,0), 0.5);
+			rings_.emplace_back(SoNSRing::Color::RED, CVector3(0,0,0), 0.5);
 
 		struct SoNSDebug debugMessage;
 		debugMessage.quality = sonsQuality_f_;
 
 		result.log = log_.str();
 		result.drawArrows = arrows_;
+		result.drawRings = rings_;
 		result.outputVelocity = outputVelocity_;
 		result.debugMessage = debugMessage;
 
