@@ -1,9 +1,9 @@
 <launch>
-    <executable cmd="argos3 -c build/drone/scripts/configuration.argos" output="screen" shell="true" />
+    <executable cmd="argos3 -c build/drone/scripts/configuration.argos" output="log" shell="true" />
 
     DRONES
 
     <node name="debugNode" pkg="drone" exec="debugNode" output="log" />
     <node name="monitor" pkg="rqt_gui" exec="rqt_gui" />
 
-</launch> 
+</launch>
