@@ -9,7 +9,8 @@ using std::map;
 
 #include "rclcpp/rclcpp.hpp"
 #include "geometry_msgs/msg/pose.hpp"
-#include "std_msgs/msg/empty.hpp"
+#include "std_msgs/msg/u_int32.hpp"
+#include "std_msgs/msg/string.hpp"
 #include "std_msgs/msg/byte_multi_array.hpp"
 
 #include "drone/msg/pose_sharing.hpp"
@@ -92,8 +93,10 @@ public:
 			this->create_publisher<drone::msg::Debug>("/debug", 100);
 
 		// Subscribe to simuTick topic to start timer on first signal
-		m_SimuTickSubscriber = this->create_subscription<std_msgs::msg::Empty>("/simuTick", 10,
-			[this](const std_msgs::msg::Empty::SharedPtr) -> void {
+		m_SimuTickBackPublisher =
+			this->create_publisher<std_msgs::msg::String>("/simuTickBack", 100);
+		m_SimuTickSubscriber = this->create_subscription<std_msgs::msg::UInt32>("/simuTick", 10,
+			[this](const std_msgs::msg::UInt32::SharedPtr msg) -> void {
 				// Only start timer on first tick if not already started
 				// step timer, call step() in a frequency
 				/*
@@ -105,6 +108,10 @@ public:
 				}
 				*/
 				step();
+				// send my ID back
+				std_msgs::msg::String simuTickMsg;
+				simuTickMsg.data = m_strMyID + "_" + std::to_string(msg->data);
+				m_SimuTickBackPublisher->publish(simuTickMsg);
 			}
 		);
 	}
@@ -286,7 +293,8 @@ private:
 	rclcpp::Publisher<geometry_msgs::msg::Pose>::SharedPtr m_drawRingPublisher;
 	rclcpp::Publisher<drone::msg::Debug>::SharedPtr m_debugPublisher;
 
-	rclcpp::Subscription<std_msgs::msg::Empty>::SharedPtr m_SimuTickSubscriber;
+	rclcpp::Subscription<std_msgs::msg::UInt32>::SharedPtr m_SimuTickSubscriber;
+	rclcpp::Publisher<std_msgs::msg::String>::SharedPtr m_SimuTickBackPublisher;
 
 	rclcpp::TimerBase::SharedPtr m_Timer; // 定时器
 

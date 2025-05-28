@@ -11,7 +11,6 @@ namespace argos {
          rclcpp::init(0, nullptr);
       }
       m_LoopFunctionRos2NodeHandle = std::make_shared<rclcpp::Node>("argos_loop_function_node");
-		m_pSimuTick = m_LoopFunctionRos2NodeHandle->create_publisher<std_msgs::msg::Empty>("/simuTick", 10);
       m_debugDrawArrowSubscriber = m_LoopFunctionRos2NodeHandle->create_subscription<geometry_msgs::msg::Pose>(
          "/drawArrows", 1000,
          std::bind(&CMyLoopFunctions::debugDrawArrowCallback, this, std::placeholders::_1)
@@ -29,12 +28,35 @@ namespace argos {
       m_pDebugEntity->GetArrows().emplace_back(CVector3(0,0,0), CVector3(0,1,0), CColor::GREEN);
       m_pDebugEntity->GetArrows().emplace_back(CVector3(0,0,0), CVector3(0,0,1), CColor::BLACK);
       //m_pDebugEntity->GetRings().emplace_back(CVector3(0,0,0.0), 1, CColor::BLACK);
+
+      // get entities for drone tick index
+      CEntity::TVector& tRootEntityVector = GetSpace().GetRootEntityVector();
+      for(CEntity* pc_entity : tRootEntityVector) {
+         // check if pc_entity->GetId() starts with drone
+         if (pc_entity->GetId().find("drone") == 0) {
+            m_mapTickIndex[pc_entity->GetId()] = m_unTickCount;
+         }
+      }
+
+      // tick ping pong
+		m_pSimuTick = m_LoopFunctionRos2NodeHandle->create_publisher<std_msgs::msg::UInt32>("/simuTick", 10);
+      m_pSimuTickSubscriber = m_LoopFunctionRos2NodeHandle->create_subscription<std_msgs::msg::String>(
+         "/simuTickBack", 1000,
+			[this](std_msgs::msg::String::UniquePtr msg) -> void {
+            // parse msg.data, break from "_", the first half is the id, the second half is a uint32_t, is tick number
+            std::string id = msg->data.substr(0, msg->data.find("_"));
+            std::string number = msg->data.substr(msg->data.find("_")+1);
+            m_mapTickIndex[id] = std::stoi(number);
+			}
+      );
    }
 
    /****************************************/
    /****************************************/
 
    void CMyLoopFunctions::PreStep() {
+      m_unTickCount++;
+
       m_pDebugEntity->GetArrows().clear();
       m_pDebugEntity->GetRings().clear();
 
@@ -43,7 +65,8 @@ namespace argos {
       m_pDebugEntity->GetArrows().emplace_back(CVector3(0,0,0), CVector3(0,0,1), CColor::BLACK);
       //m_pDebugEntity->GetRings().emplace_back(CVector3(0,0,0.0), 1, CColor::BLACK);
 
-      std_msgs::msg::Empty msg;
+      auto msg = std_msgs::msg::UInt32();
+      msg.data = m_unTickCount;
       m_pSimuTick->publish(msg);
    }
 
@@ -51,7 +74,23 @@ namespace argos {
    /****************************************/
 
    void CMyLoopFunctions::PostStep() {
-      for (int i = 0; i < 1000; i++)
+      // check m_mapTickIndex, if all equal to m_unTickCount, then all entities have finished their step
+      bool bAllEntitiesFinished = false;
+      while (bAllEntitiesFinished == false) {
+         rclcpp::spin_some(m_LoopFunctionRos2NodeHandle);
+
+         for (auto& [key, value] : m_mapTickIndex) {
+            if (value != m_unTickCount) {
+               bAllEntitiesFinished = false;
+               break;
+            }
+            else {
+               bAllEntitiesFinished = true;
+            }
+         }
+      }
+
+      for (int i = 0; i < 100; i++)
          rclcpp::spin_some(m_LoopFunctionRos2NodeHandle);
    }
 

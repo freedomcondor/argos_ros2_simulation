@@ -12,7 +12,8 @@ namespace argos {
 #include "debug/debug_entity.h"
 
 #include "rclcpp/rclcpp.hpp"
-#include "std_msgs/msg/empty.hpp"
+#include "std_msgs/msg/u_int32.hpp"
+#include "std_msgs/msg/string.hpp"
 #include "geometry_msgs/msg/pose.hpp"
 
 namespace argos {
@@ -40,7 +41,11 @@ namespace argos {
       void debugDrawArrowCallback(const geometry_msgs::msg::Pose::SharedPtr pose);
       void debugDrawRingCallback(const geometry_msgs::msg::Pose::SharedPtr pose);
 
-      rclcpp::Publisher<std_msgs::msg::Empty>::SharedPtr m_pSimuTick;
+      rclcpp::Publisher<std_msgs::msg::UInt32>::SharedPtr m_pSimuTick;
+      rclcpp::Subscription<std_msgs::msg::String>::SharedPtr m_pSimuTickSubscriber;
+
+      std::map<std::string, uint32_t> m_mapTickIndex;
+      uint32_t m_unTickCount = 0;
    };
 }
 

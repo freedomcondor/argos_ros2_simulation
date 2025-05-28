@@ -8,7 +8,7 @@ using std::string;
 using std::map;
 
 #include "rclcpp/rclcpp.hpp"
-#include "std_msgs/msg/empty.hpp"
+#include "std_msgs/msg/u_int32.hpp"
 #include "geometry_msgs/msg/pose.hpp"
 
 #include "drone/msg/debug.hpp"
@@ -34,8 +34,8 @@ public:
 			this->create_publisher<geometry_msgs::msg::Pose>("/drawRings", 10);
 
 		// Subscribe to simuTick topic to start timer on first signal
-		m_SimuTickSubscriber = this->create_subscription<std_msgs::msg::Empty>("/simuTick", 10,
-			[this](const std_msgs::msg::Empty::SharedPtr) -> void {
+		m_SimuTickSubscriber = this->create_subscription<std_msgs::msg::UInt32>("/simuTick", 10,
+			[this](const std_msgs::msg::UInt32::SharedPtr) -> void {
 				// Only start timer on first tick if not already started
 				// step timer, call step() in a frequency
 				/*
@@ -158,7 +158,7 @@ private:
 	rclcpp::Publisher<geometry_msgs::msg::Pose>::SharedPtr m_drawArrowPublisher;
 	rclcpp::Publisher<geometry_msgs::msg::Pose>::SharedPtr m_drawRingPublisher;
 
-	rclcpp::Subscription<std_msgs::msg::Empty>::SharedPtr m_SimuTickSubscriber;
+	rclcpp::Subscription<std_msgs::msg::UInt32>::SharedPtr m_SimuTickSubscriber;
 
 	std::map<string, drone::msg::Debug> m_DebugMessageMap;
 	map<double, uint16_t> m_color_index;
