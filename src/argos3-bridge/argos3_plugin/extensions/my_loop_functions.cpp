@@ -80,7 +80,7 @@ namespace argos {
          rclcpp::spin_some(m_LoopFunctionRos2NodeHandle);
 
          for (auto& [key, value] : m_mapTickIndex) {
-            if (value != m_unTickCount) {
+            if (value < m_unTickCount) {
                bAllEntitiesFinished = false;
                break;
             }
@@ -90,7 +90,7 @@ namespace argos {
          }
       }
 
-      for (int i = 0; i < 100; i++)
+      for (int i = 0; i < 500; i++)
          rclcpp::spin_some(m_LoopFunctionRos2NodeHandle);
    }
 
