@@ -87,4 +87,4 @@ import os
 os.system("mv ~/.ros/log ~/.ros/log_history_$(date '+%Y%m%d_%H%M%S')")
 #os.system("RCUTILS_LOGGING_MIN_SEVERITY=ERROR ros2 launch drone drone_launch.xml > /dev/null 2>&1")
 #os.system("RCUTILS_LOGGING_MIN_SEVERITY=ERROR ros2 launch drone drone_launch.xml")
-os.system("ros2 launch drone drone_launch.xml")
+os.system("ros2 launch drone drone_launch.xml > /dev/null")
