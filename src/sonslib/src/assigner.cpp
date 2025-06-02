@@ -18,6 +18,22 @@ namespace SoNSLib {
 		}
 	}
 
+	void SoNSAssigner::AddParent(string _id) {
+		sons_->assignTo_str_ = "";
+	}
+
+	void SoNSAssigner::AddChild(string _id) {
+		if (sons_->assignTo_str_ == _id) {
+			sons_->assignTo_str_ = "";
+		}
+	}
+
+	void SoNSAssigner::Remove(string _id) {
+		if (sons_->ExistsInParent(_id)) {
+			sons_->assignTo_str_ = "";
+		}
+	}
+
 	void SoNSAssigner::Step(double time) {
 		sons_->log_ << "first line of assigner " << endl;
 		// check assign

@@ -18,6 +18,9 @@ namespace SoNSLib {
 	public:
 		SoNSAssigner(SoNS& sons) : SoNSModule(sons) {};
 		void Step(double time);
+		void AddParent(string id) override;
+		void AddChild(string id) override;
+		void Remove(string id) override;
 		void Assign(std::string _child_id, std::string _to_id) override;
 	};
 }

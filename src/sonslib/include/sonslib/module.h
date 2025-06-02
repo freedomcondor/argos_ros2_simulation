@@ -16,6 +16,8 @@ namespace SoNSLib {
 		virtual void PostStep() {}
 		virtual void Recruit(std::string _id) { (void)_id; }
 		virtual void Assign(std::string _child_id, std::string _to_id) { (void)_child_id; (void)_to_id; }
+		virtual void AddParent(std::string _id) { (void)_id; }
+		virtual void AddChild(std::string _id) { (void)_id; }
 		virtual void Remove(std::string _id) { (void)_id; }
 		virtual void RemoveWithUpdate(std::string _id) { (void)_id; }
 

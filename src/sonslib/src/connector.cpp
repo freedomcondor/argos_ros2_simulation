@@ -28,9 +28,9 @@ namespace SoNSLib {
 		// check heartbeat
 		for (const auto& command : sons_->GetReceivedCommands()[CMessager::CommandType::HEARTBEAT]) {
 			string fromId = command.id;
-			if (sons_->ExistsInParent(fromId)) {
+			if ((sons_->ExistsInParent(fromId)) && (!sons_->ExistsInChildren(fromId))) {
 				sons_->parent_RobotP_->heartbeatCD = sons_->parameters_.heartbeatCDTime;
-			} else if (sons_->ExistsInChildren(fromId)) {
+			} else if (!(sons_->ExistsInParent(fromId)) && (sons_->ExistsInChildren(fromId))) {
 				sons_->children_mapRobotP_[fromId]->heartbeatCD = sons_->parameters_.heartbeatCDTime;
 			}
 		}
@@ -71,7 +71,7 @@ namespace SoNSLib {
 			if ((sons_->ExistsInNeighbors(fromId)) &&
 			    (m_WaitingList.find(fromId) != m_WaitingList.end())
 			   ) {
-				sons_->children_mapRobotP_[fromId] = &sons_->neighbors_mapRobot_[fromId];
+				sons_->AddChild(fromId);
 				sons_->children_mapRobotP_[fromId]->heartbeatCD = sons_->parameters_.heartbeatCDTime;
 				m_WaitingList.erase(fromId);
 			}
@@ -156,7 +156,7 @@ namespace SoNSLib {
 				sons_->messager_.sendCommand(sons_->parent_RobotP_->id, CMessager::CommandType::BREAK, {});
 				sons_->Remove(sons_->parent_RobotP_->id);
 			}
-			sons_->parent_RobotP_ = &sons_->neighbors_mapRobot_[bestFromId];
+			sons_->AddParent(bestFromId);
 			sons_->parent_RobotP_->heartbeatCD = sons_->parameters_.heartbeatCDTime;
 			sons_->messager_.sendCommand(
 				bestFromId,
@@ -211,6 +211,22 @@ namespace SoNSLib {
 				sons_->sonsQuality_f_
 			)
 		);
+	}
+
+	void SoNSConnector::AddParent(string _id) {
+		if ((sons_->ExistsInNeighbors(_id)) &&
+		    (sons_->parent_RobotP_ == nullptr)
+		   ) {
+			sons_->parent_RobotP_ = &sons_->neighbors_mapRobot_[_id];
+		}
+	}
+
+	void SoNSConnector::AddChild(string _id) {
+		if ((sons_->ExistsInNeighbors(_id)) &&
+		    !(sons_->ExistsInChildren(_id))
+		   ) {
+			sons_->children_mapRobotP_[_id] = &sons_->neighbors_mapRobot_[_id];
+		}
 	}
 
 	void SoNSConnector::Remove(string _id) {

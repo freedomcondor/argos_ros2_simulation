@@ -97,6 +97,8 @@ namespace SoNSLib {
 			);
 			void Recruit(string _id);
 			void Assign(string _child_id, string _to_id);
+			void AddParent(string _id);
+			void AddChild(string _id);
 			void Remove(string _id);
 			void RemoveWithUpdate(string _id);
 

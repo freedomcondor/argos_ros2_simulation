@@ -23,6 +23,8 @@ namespace SoNSLib {
 		void Step(double time);
 
 		void Recruit(string id) override;
+		void AddParent(string id) override;
+		void AddChild(string id) override;
 		void Remove(string id) override;
 		void RemoveWithUpdate(string id) override;
 

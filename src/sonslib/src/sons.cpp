@@ -59,6 +59,18 @@ namespace SoNSLib {
 		}
 	}
 
+	void SoNS::AddParent(string _id) {
+		for (auto& module : modules_) {
+			module->AddParent(_id);
+		}
+	}
+
+	void SoNS::AddChild(string _id) {
+		for (auto& module : modules_) {
+			module->AddChild(_id);
+		}
+	}
+
 	void SoNS::Remove(string _id) {
 		for (auto& module : modules_) {
 			module->Remove(_id);
