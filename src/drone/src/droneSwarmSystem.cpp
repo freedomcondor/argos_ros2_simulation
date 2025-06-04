@@ -61,7 +61,7 @@ public:
 		m_PoseSharingPublisher =
 			this->create_publisher<drone::msg::PoseSharing>("/poseSharing", 1000);
 
-		this->declare_parameter("distance_threshold", 10.0);
+		this->declare_parameter("distance_threshold", 7.0);
 		this->declare_parameter("target_distance", 3.0);
 
 		m_PoseSharingSubscriber = this->create_subscription<drone::msg::PoseSharing>("/poseSharing", 1000,
