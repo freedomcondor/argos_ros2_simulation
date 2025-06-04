@@ -102,6 +102,14 @@ namespace argos {
 
       for (int i = 0; i < 500; i++)
          rclcpp::spin_some(m_LoopFunctionRos2NodeHandle);
+      /*
+      m_bMoreIncomingMessages = true;
+      while (m_bMoreIncomingMessages == true) {
+         m_bMoreIncomingMessages = false;
+         for (int i = 0; i < 20; i++)
+            rclcpp::spin_some(m_LoopFunctionRos2NodeHandle);
+      }
+      */
    }
 
    /****************************************/
@@ -137,6 +145,7 @@ namespace argos {
       }
 
       m_pDebugEntity->GetArrows().emplace_back(from, to, color);
+      m_bMoreIncomingMessages = true;
    }
 
    void CMyLoopFunctions::debugDrawRingCallback(const geometry_msgs::msg::Pose::SharedPtr pose) {
@@ -158,6 +167,7 @@ namespace argos {
       }
 
       m_pDebugEntity->GetRings().emplace_back(middle, radius, color);
+      m_bMoreIncomingMessages = true;
    }
 
    /****************************************/

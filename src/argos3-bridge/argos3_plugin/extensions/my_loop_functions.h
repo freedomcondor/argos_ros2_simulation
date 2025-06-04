@@ -46,6 +46,7 @@ namespace argos {
 
       std::map<std::string, uint32_t> m_mapTickIndex;
       uint32_t m_unTickCount = 0;
+      bool m_bMoreIncomingMessages = false;
    };
 }
 
