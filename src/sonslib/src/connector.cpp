@@ -10,20 +10,37 @@ using std::endl;
 namespace SoNSLib {
 
 	void SoNSConnector::Init() {
+		sonsLastId_str_ = sons_->sonsId_str_;
 		sons_->sonsId_str_ = sons_->myId_str_;
 		// 随机数生成器
 		std::random_device rd; // 获取随机数种子
 		std::mt19937 gen(rd()); // 使用梅森旋转算法生成随机数
 		std::uniform_real_distribution<> dis(0.0, 1.0); // 定义范围为0到1的均匀分布
 
+		sonsLastQuality_f_ = sons_->sonsQuality_f_;
 		sons_->sonsQuality_f_= dis(gen); // 生成随机数并赋值给sonsQuality
 	}
 
 	void SoNSConnector::Step(double time) {
 		sons_->log_ << "-- recruitor -----------------------" << endl;
-		sons_->log_ << "\tlockCD = " << lockCD << std::endl;
-		if (lockCD >= 0) lockCD -= time;
+		sons_->log_ << "\tlockmap: ";
+		for (const auto& [id, timeleft] : m_lockmap) { sons_->log_ << id << ", " << timeleft << " | ";}
+		sons_->log_ << std::endl;
+
 		UpdateWaitingList(time);
+		// update lockmap
+		for (auto& [id, timeleft] : m_lockmap) {
+			if (timeleft >= 0)
+				m_lockmap[id] -= time;
+		}
+		// remove from lockmap the value < 0
+		for (auto it = m_lockmap.begin(); it != m_lockmap.end();) {
+			if (it->second < 0) {
+				it = m_lockmap.erase(it);
+			} else {
+				++it;
+			}
+		}
 
 		// check heartbeat
 		for (const auto& command : sons_->GetReceivedCommands()[CMessager::CommandType::HEARTBEAT]) {
@@ -96,6 +113,8 @@ namespace SoNSLib {
 					sons_->RemoveWithUpdate(fromId);
 				}
 				else {
+					sonsLastId_str_ = sons_->sonsId_str_;
+					sonsLastQuality_f_= sons_->sonsQuality_f_;
 					sons_->sonsId_str_ = his_sonsId;
 					sons_->sonsQuality_f_ = his_sonsQuality;
 					UpdateSoNSID();
@@ -135,7 +154,7 @@ namespace SoNSLib {
 			    (
 					( (his_sonsId != sons_->sonsId_str_) &&
 					  (his_sonsQuality > bestSonsQuality) &&
-					  (lockCD < 0)
+					  (((m_lockmap.find(his_sonsId) == m_lockmap.end()) || (m_lockmap[his_sonsId] < 0)))
 					)
 					||
 					(fromId == sons_->assignTo_str_)
@@ -166,6 +185,8 @@ namespace SoNSLib {
 			if ((sons_->sonsId_str_ != bestSonsId) ||
 			    (sons_->sonsQuality_f_ != bestSonsQuality)
 			) {
+				sonsLastId_str_ = sons_->sonsId_str_;
+				sonsLastQuality_f_= sons_->sonsQuality_f_;
 				sons_->sonsId_str_ = bestSonsId;
 				sons_->sonsQuality_f_ = bestSonsQuality;
 				UpdateSoNSID();
@@ -248,7 +269,8 @@ namespace SoNSLib {
 	}
 
 	void SoNSConnector::UpdateSoNSID() {
-		lockCD = (sons_->depth_ * 2 + 2) * sons_->step_time_;
+		if (sons_->sonsQuality_f_ < sonsLastQuality_f_)
+			m_lockmap[sonsLastId_str_] = sons_->parameters_.maxDepth * sons_->step_time_;
 		for (auto& pair : sons_->children_mapRobotP_) {
 			sons_->messager_.sendCommand(
 				pair.first,

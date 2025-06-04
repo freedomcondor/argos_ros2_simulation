@@ -35,13 +35,11 @@ namespace SoNSLib {
 	}
 
 	void SoNSAssigner::Step(double time) {
-		sons_->log_ << "first line of assigner " << endl;
 		// check assign
 		for (const auto& command : sons_->GetReceivedCommands()[CMessager::CommandType::ASSIGN]) {
 			string fromId = command.id;
 			if (sons_->ExistsInParent(fromId)) {
 				sons_->assignTo_str_ = CMessager::parseString(command.binary);
-				sons_->log_ << "parsing  assign command : " << sons_->assignTo_str_ << endl;
 			}
 		}
 	}

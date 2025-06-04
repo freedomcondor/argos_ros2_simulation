@@ -34,7 +34,9 @@ namespace SoNSLib {
 			double waitingTimeCountDown;
 			SoNSRobot* pRobot;
 		};
-		double lockCD = -1;
+		map<string, double> m_lockmap;
+		string sonsLastId_str_;
+		double sonsLastQuality_f_;
 		map<string, WaitingSoNSRobot> m_WaitingList;
 		void UpdateWaitingList(double time);
 		//------------------------------------------------------
