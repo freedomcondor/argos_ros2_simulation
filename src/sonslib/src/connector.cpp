@@ -10,12 +10,16 @@ using std::endl;
 namespace SoNSLib {
 
 	void SoNSConnector::Init() {
+		GenerateSoNSID(0, 1);
+	}
+
+	void SoNSConnector::GenerateSoNSID(double _rangeLow, double _rangeHigh) {
 		sonsLastId_str_ = sons_->sonsId_str_;
 		sons_->sonsId_str_ = sons_->myId_str_;
 		// 随机数生成器
 		std::random_device rd; // 获取随机数种子
 		std::mt19937 gen(rd()); // 使用梅森旋转算法生成随机数
-		std::uniform_real_distribution<> dis(0.0, 1.0); // 定义范围为0到1的均匀分布
+		std::uniform_real_distribution<> dis(_rangeLow, _rangeHigh); // 定义范围为0到1的均匀分布
 
 		sonsLastQuality_f_ = sons_->sonsQuality_f_;
 		sons_->sonsQuality_f_= dis(gen); // 生成随机数并赋值给sonsQuality
@@ -40,6 +44,24 @@ namespace SoNSLib {
 			} else {
 				++it;
 			}
+		}
+
+		// check ack
+		for (const auto& command : sons_->GetReceivedCommands()[CMessager::CommandType::ACKNOWLEDGEMENT]) {
+			string fromId = command.id;
+			if ((sons_->ExistsInNeighbors(fromId)) &&
+			    (m_WaitingList.find(fromId) != m_WaitingList.end())
+			   ) {
+				sons_->AddChild(fromId);
+				sons_->children_mapRobotP_[fromId]->heartbeatCD = sons_->parameters_.heartbeatCDTime;
+				m_WaitingList.erase(fromId);
+			}
+		}
+
+		// check break
+		for (const auto& command : sons_->GetReceivedCommands()[CMessager::CommandType::BREAK]) {
+			string fromId = command.id;
+			sons_->RemoveWithUpdate(fromId);
 		}
 
 		// check heartbeat
@@ -69,6 +91,36 @@ namespace SoNSLib {
 			}
 		}
 
+		// check update
+		for (const auto& command : sons_->GetReceivedCommands()[CMessager::CommandType::UPDATE]) {
+			string fromId = command.id;
+			if (sons_->ExistsInParent(fromId)) {
+				uint index = 0;
+				string his_sonsId;
+				double his_sonsQuality;
+				parseRecruitMessage(command.binary, index, his_sonsId, his_sonsQuality);
+				// prevent loop
+				if ((his_sonsId == sons_->myId_str_) ||
+				    ((m_lockmap.find(his_sonsId) != m_lockmap.end()) && (m_lockmap[his_sonsId] > 0)) ||
+				    (sons_->branchQualities_.find(his_sonsId) != sons_->branchQualities_.end())
+				   ) {
+					sons_->messager_.sendCommand(
+						sons_->parent_RobotP_->id,
+						CMessager::CommandType::BREAK,
+						{}
+					);
+					RemoveWithSmallerUpdate(fromId);
+				}
+				else {
+					sonsLastId_str_ = sons_->sonsId_str_;
+					sonsLastQuality_f_= sons_->sonsQuality_f_;
+					sons_->sonsId_str_ = his_sonsId;
+					sons_->sonsQuality_f_ = his_sonsQuality;
+					UpdateSoNSID();
+				}
+			}
+		}
+
 		// countdown heartbeat for children
 		for (auto it = sons_->children_mapRobotP_.begin(); it != sons_->children_mapRobotP_.end();) {
 			it->second->heartbeatCD -= time;
@@ -83,75 +135,6 @@ namespace SoNSLib {
 			} else {
 				++it;
 			}
-		}
-
-		// check ack
-		for (const auto& command : sons_->GetReceivedCommands()[CMessager::CommandType::ACKNOWLEDGEMENT]) {
-			string fromId = command.id;
-			if ((sons_->ExistsInNeighbors(fromId)) &&
-			    (m_WaitingList.find(fromId) != m_WaitingList.end())
-			   ) {
-				sons_->AddChild(fromId);
-				sons_->children_mapRobotP_[fromId]->heartbeatCD = sons_->parameters_.heartbeatCDTime;
-				m_WaitingList.erase(fromId);
-			}
-		}
-
-		// check break
-		for (const auto& command : sons_->GetReceivedCommands()[CMessager::CommandType::BREAK]) {
-			string fromId = command.id;
-			sons_->RemoveWithUpdate(fromId);
-		}
-
-		// check update
-		for (const auto& command : sons_->GetReceivedCommands()[CMessager::CommandType::UPDATE]) {
-			string fromId = command.id;
-			if (sons_->ExistsInParent(fromId)) {
-				uint index = 0;
-				string his_sonsId;
-				double his_sonsQuality;
-				parseRecruitMessage(command.binary, index, his_sonsId, his_sonsQuality);
-				// prevent loop
-				if (his_sonsId == sons_->myId_str_) {
-					sons_->RemoveWithUpdate(fromId);
-				}
-				else {
-					sonsLastId_str_ = sons_->sonsId_str_;
-					sonsLastQuality_f_= sons_->sonsQuality_f_;
-					sons_->sonsId_str_ = his_sonsId;
-					sons_->sonsQuality_f_ = his_sonsQuality;
-					UpdateSoNSID();
-				}
-			}
-		}
-
-		// add branchQualities
-		sons_->branchQualities_.clear();
-		sons_->branchQualities_[sons_->sonsId_str_] = sons_->sonsQuality_f_;
-		for (const auto& [robotId, robotP] : sons_->children_mapRobotP_) {
-			for (const auto& [sonsId, quality] : robotP->branchQualities) {
-				if (sons_->branchQualities_.find(sonsId) != sons_->branchQualities_.end()) {
-					sons_->branchQualities_[sonsId] = std::max(sons_->branchQualities_[sonsId], quality);
-				} else {
-					sons_->branchQualities_[sonsId] = quality;
-				}
-			}
-		}
-
-		// Send heartbeat to parent and all children
-		if (sons_->parent_RobotP_ != nullptr) {
-			sons_->messager_.sendCommand(
-				sons_->parent_RobotP_->id,
-				CMessager::CommandType::HEARTBEAT,
-				generateBranchQualities(sons_->branchQualities_)
-			);
-		}
-		for (auto& pair : sons_->children_mapRobotP_) {
-			sons_->messager_.sendCommand(
-				pair.first,
-				CMessager::CommandType::HEARTBEAT,
-				{}
-			);
 		}
 
 		// check recruit messages
@@ -208,6 +191,35 @@ namespace SoNSLib {
 				sons_->sonsQuality_f_ = bestSonsQuality;
 				UpdateSoNSID();
 			}
+		}
+
+		// add branchQualities
+		sons_->branchQualities_.clear();
+		sons_->branchQualities_[sons_->sonsId_str_] = sons_->sonsQuality_f_;
+		for (const auto& [robotId, robotP] : sons_->children_mapRobotP_) {
+			for (const auto& [sonsId, quality] : robotP->branchQualities) {
+				if (sons_->branchQualities_.find(sonsId) != sons_->branchQualities_.end()) {
+					sons_->branchQualities_[sonsId] = std::max(sons_->branchQualities_[sonsId], quality);
+				} else {
+					sons_->branchQualities_[sonsId] = quality;
+				}
+			}
+		}
+
+		// Send heartbeat to parent and all children
+		if (sons_->parent_RobotP_ != nullptr) {
+			sons_->messager_.sendCommand(
+				sons_->parent_RobotP_->id,
+				CMessager::CommandType::HEARTBEAT,
+				generateBranchQualities(sons_->branchQualities_)
+			);
+		}
+		for (auto& pair : sons_->children_mapRobotP_) {
+			sons_->messager_.sendCommand(
+				pair.first,
+				CMessager::CommandType::HEARTBEAT,
+				{}
+			);
 		}
 
 		// recruit all
@@ -274,6 +286,17 @@ namespace SoNSLib {
 		}
 	}
 
+	void SoNSConnector::RemoveWithSmallerUpdate(string _id) {
+		if (sons_->ExistsInParent(_id)) {
+			sons_->Remove(_id);
+			GenerateSoNSID(0, sons_->sonsQuality_f_);
+			UpdateSoNSID();
+		}
+		else {
+			sons_->Remove(_id);
+		}
+	}
+
 	void SoNSConnector::RemoveWithUpdate(string _id) {
 		if (sons_->ExistsInParent(_id)) {
 			sons_->Remove(_id);
@@ -287,7 +310,7 @@ namespace SoNSLib {
 
 	void SoNSConnector::UpdateSoNSID() {
 		if (sons_->sonsQuality_f_ < sonsLastQuality_f_)
-			m_lockmap[sonsLastId_str_] = (sons_->depth_ * 3 + 5) * sons_->step_time_;
+			m_lockmap[sonsLastId_str_] = (sons_->depth_ * 2.5 + 2) * sons_->step_time_;
 		for (auto& pair : sons_->children_mapRobotP_) {
 			sons_->messager_.sendCommand(
 				pair.first,

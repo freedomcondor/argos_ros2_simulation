@@ -12,11 +12,11 @@ namespace argos {
       }
       m_LoopFunctionRos2NodeHandle = std::make_shared<rclcpp::Node>("argos_loop_function_node");
       m_debugDrawArrowSubscriber = m_LoopFunctionRos2NodeHandle->create_subscription<geometry_msgs::msg::Pose>(
-         "/drawArrows", 1000,
+         "/drawArrows", 5000,
          std::bind(&CMyLoopFunctions::debugDrawArrowCallback, this, std::placeholders::_1)
       );
       m_debugDrawRingSubscriber = m_LoopFunctionRos2NodeHandle->create_subscription<geometry_msgs::msg::Pose>(
-         "/drawRings", 1000,
+         "/drawRings", 5000,
          std::bind(&CMyLoopFunctions::debugDrawRingCallback, this, std::placeholders::_1)
       );
 

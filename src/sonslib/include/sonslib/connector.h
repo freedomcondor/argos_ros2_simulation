@@ -19,7 +19,8 @@ namespace SoNSLib {
 	public:
 		SoNSConnector(SoNS& sons) : SoNSModule(sons) {};
 		void Init() override;
-		void UpdateSoNSID();
+		void UpdateSoNSID(); // propagate SoNS IDs to all robots
+		void GenerateSoNSID(double _rangeLow, double _rangeHigh); // generate new quality
 		void Step(double time);
 
 		void Recruit(string id) override;
@@ -27,6 +28,7 @@ namespace SoNSLib {
 		void AddChild(string id) override;
 		void Remove(string id) override;
 		void RemoveWithUpdate(string id) override;
+		void RemoveWithSmallerUpdate(string _id);
 
 	//private:
 	public:

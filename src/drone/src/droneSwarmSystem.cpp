@@ -47,7 +47,7 @@ public:
 			}
 		);
 
-		m_SwarmCommunicationSubscriber = this->create_subscription<drone::msg::Message>("communication", 2000,
+		m_SwarmCommunicationSubscriber = this->create_subscription<drone::msg::Message>("communication", 5000,
 			[this](const drone::msg::Message::SharedPtr msg) -> void {
 				struct SoNSMessage sonsMsg;
 				sonsMsg.id = msg->id; // Set the ID from the received message
@@ -75,7 +75,7 @@ public:
 				if ((neighbour.m_Position - m_CurrentTransform.m_Position).Length() < distanceThreshold) {
 					m_SwarmPoses[msg->id] = neighbour - m_CurrentTransform;
 					if (m_SwarmCommunicationPublishers.find(msg->id) == m_SwarmCommunicationPublishers.end()) {
-						m_SwarmCommunicationPublishers[msg->id] = this->create_publisher<drone::msg::Message>("/" + msg->id + "/communication", 2000);
+						m_SwarmCommunicationPublishers[msg->id] = this->create_publisher<drone::msg::Message>("/" + msg->id + "/communication", 5000);
 					}
 				}
 				else {
