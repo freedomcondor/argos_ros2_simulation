@@ -76,16 +76,26 @@ namespace argos {
    void CMyLoopFunctions::PostStep() {
       // check m_mapTickIndex, if all equal to m_unTickCount, then all entities have finished their step
       bool bAllEntitiesFinished = false;
-      while (bAllEntitiesFinished == false) {
+      bool bAnyEntitiesFinished = false;
+
+      //while (bAllEntitiesFinished == false) {
+      while (bAnyEntitiesFinished == false) {
+
          rclcpp::spin_some(m_LoopFunctionRos2NodeHandle);
 
          for (auto& [key, value] : m_mapTickIndex) {
+            // check all entities have finished their step
             if (value < m_unTickCount) {
                bAllEntitiesFinished = false;
                break;
             }
             else {
                bAllEntitiesFinished = true;
+            }
+            // check anyone reach
+            if (value >= m_unTickCount) {
+               bAnyEntitiesFinished = true;
+               break;
             }
          }
       }
