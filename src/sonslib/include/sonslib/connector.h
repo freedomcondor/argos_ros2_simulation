@@ -42,6 +42,8 @@ namespace SoNSLib {
 		//------------------------------------------------------
 		vector<uint8_t> generateRecruitMessage(string sons_id, double sons_quality);
 		void parseRecruitMessage(const vector<uint8_t>& _binary, uint& i, string& _his_id, double& _his_quality);
+		vector<uint8_t> generateBranchQualities(const map<string, double>& _branchQualities);
+		void parseBranchQualities(const vector<uint8_t>& _binary, uint& i, map<string, double>& _branchQualities);
 	};
 }
 

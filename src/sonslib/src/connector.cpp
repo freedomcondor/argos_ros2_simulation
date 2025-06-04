@@ -49,6 +49,9 @@ namespace SoNSLib {
 				sons_->parent_RobotP_->heartbeatCD = sons_->parameters_.heartbeatCDTime;
 			} else if (!(sons_->ExistsInParent(fromId)) && (sons_->ExistsInChildren(fromId))) {
 				sons_->children_mapRobotP_[fromId]->heartbeatCD = sons_->parameters_.heartbeatCDTime;
+				uint i = 0;
+				sons_->children_mapRobotP_[fromId]->branchQualities.clear();
+				parseBranchQualities(command.binary, i, sons_->children_mapRobotP_[fromId]->branchQualities);
 			}
 		}
 
@@ -122,12 +125,25 @@ namespace SoNSLib {
 			}
 		}
 
+		// add branchQualities
+		sons_->branchQualities_.clear();
+		sons_->branchQualities_[sons_->sonsId_str_] = sons_->sonsQuality_f_;
+		for (const auto& [robotId, robotP] : sons_->children_mapRobotP_) {
+			for (const auto& [sonsId, quality] : robotP->branchQualities) {
+				if (sons_->branchQualities_.find(sonsId) != sons_->branchQualities_.end()) {
+					sons_->branchQualities_[sonsId] = std::max(sons_->branchQualities_[sonsId], quality);
+				} else {
+					sons_->branchQualities_[sonsId] = quality;
+				}
+			}
+		}
+
 		// Send heartbeat to parent and all children
 		if (sons_->parent_RobotP_ != nullptr) {
 			sons_->messager_.sendCommand(
 				sons_->parent_RobotP_->id,
 				CMessager::CommandType::HEARTBEAT,
-				{}
+				generateBranchQualities(sons_->branchQualities_)
 			);
 		}
 		for (auto& pair : sons_->children_mapRobotP_) {
@@ -154,7 +170,8 @@ namespace SoNSLib {
 			    (
 					( (his_sonsId != sons_->sonsId_str_) &&
 					  (his_sonsQuality > bestSonsQuality) &&
-					  (((m_lockmap.find(his_sonsId) == m_lockmap.end()) || (m_lockmap[his_sonsId] < 0)))
+					  (((m_lockmap.find(his_sonsId) == m_lockmap.end()) || (m_lockmap[his_sonsId] < 0))) &&
+					  (sons_->branchQualities_.find(his_sonsId) == sons_->branchQualities_.end())
 					)
 					||
 					(fromId == sons_->assignTo_str_)
@@ -270,7 +287,7 @@ namespace SoNSLib {
 
 	void SoNSConnector::UpdateSoNSID() {
 		if (sons_->sonsQuality_f_ < sonsLastQuality_f_)
-			m_lockmap[sonsLastId_str_] = sons_->parameters_.maxDepth * sons_->step_time_;
+			m_lockmap[sonsLastId_str_] = (sons_->depth_ * 3 + 5) * sons_->step_time_;
 		for (auto& pair : sons_->children_mapRobotP_) {
 			sons_->messager_.sendCommand(
 				pair.first,
@@ -304,5 +321,24 @@ namespace SoNSLib {
 	void SoNSConnector::parseRecruitMessage(const vector<uint8_t>& _binary, uint& i, string& _his_id, double& _his_quality) {
 		_his_id = CMessager::parseString(_binary, i);
 		_his_quality = CMessager::parseDouble(_binary, i);
+	}
+
+	vector<uint8_t> SoNSConnector::generateBranchQualities(const map<string, double>& _branchQualities) {
+		vector<uint8_t> content;
+		CMessager::pushUint16(content, _branchQualities.size());
+		for (const auto& [id, quality] : _branchQualities) {
+			CMessager::pushString(content, id);
+			CMessager::pushDouble(content, quality);
+		}
+		return content;
+	}
+
+	void SoNSConnector::parseBranchQualities(const vector<uint8_t>& _binary, uint& i, map<string, double>& _branchQualities) {
+		uint16_t size = CMessager::parseUint16(_binary, i);
+		for (uint16_t j = 0; j < size; ++j) {
+			string branchId = CMessager::parseString(_binary, i);
+			double branchQuality = CMessager::parseDouble(_binary, i);
+			_branchQualities[branchId] = branchQuality;
+		}
 	}
 }

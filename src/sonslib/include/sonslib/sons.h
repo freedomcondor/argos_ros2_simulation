@@ -35,6 +35,9 @@ namespace SoNSLib {
 		double heartbeatCD;
 		double seenCD;
 
+		// connector
+		map<string, double> branchQualities;
+		// scale manager
 		map<string, uint16_t> scale;
 		uint16_t depth;
 
@@ -113,6 +116,9 @@ namespace SoNSLib {
 			string myType_str_;
 			string sonsId_str_;
 			double sonsQuality_f_;
+
+			// connector
+			map<string, double> branchQualities_;
 
 			// assigner
 			string assignTo_str_;

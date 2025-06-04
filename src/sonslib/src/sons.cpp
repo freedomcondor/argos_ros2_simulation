@@ -143,6 +143,12 @@ namespace SoNSLib {
 
 		log_ << "\tassign to: ----------------------" << assignTo_str_ << endl;
 
+		log_ << "\tbranch qualities: ----------------------" << endl;
+		for (const auto& [id, number]: branchQualities_) {
+			log_ << "\t\t" << id << "\t" << number << " | "<< endl;
+		}
+		log_ << endl;
+
 		SoNSStepResult result;
 		map<string, vector<uint8_t>> messageMap = messager_.combineCommands();
 		for (auto& pair : messageMap) result.messages.push_back({pair.first, pair.second});

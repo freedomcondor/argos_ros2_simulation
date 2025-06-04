@@ -64,6 +64,7 @@ namespace SoNSLib {
 			cmdlog << indents << printCommandType(type) << ", ";
 
 			uint contentI = 0;
+			uint16_t qualitiesSize;
 			switch (type) {
 				case CommandType::RECRUIT:
 					cmdlog << parseString(cmd, contentI) << " "
@@ -75,7 +76,13 @@ namespace SoNSLib {
 					break;
 				case CommandType::ACKNOWLEDGEMENT: break;
 				case CommandType::BREAK:           break;
-				case CommandType::HEARTBEAT:       break;
+				case CommandType::HEARTBEAT:
+					qualitiesSize = parseUint16(cmd, contentI);
+					for (uint16_t j = 0; j < qualitiesSize; ++j) {
+						cmdlog << parseString(cmd, contentI) << " "
+						       << parseDouble(cmd, contentI) << ", ";
+					}
+					break;
 				case CommandType::SCALE:
 					{
 						cmdlog << "<depth> = " << parseUint16(cmd, contentI) << " ";
