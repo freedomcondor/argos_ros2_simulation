@@ -14,7 +14,7 @@
   <!-- *************** -->
 
   <controllers>
-    <test_controller library="@CMAKE_BINARY_DIR@/../../install/argos3-bridge/lib/argos3_plugin/libdrone_ros2_bridge_controller.so"
+    <test_controller library="@CMAKE_BINARY_DIR@/../../install/argos3_bridge/lib/argos3_plugin/libdrone_ros2_bridge_controller.so"
                      id="drone_ros2_bridge_controller">
       <actuators>
         <drone_flight_system implementation="default" global_mode="true" velocity_mode="true"/>
@@ -29,7 +29,7 @@
   <!-- ****************** -->
   <!-- * Loop functions * -->
   <!-- ****************** -->
-  <loop_functions library="@CMAKE_BINARY_DIR@/../../install/argos3-bridge/lib/argos3_plugin/libmy_extensions"
+  <loop_functions library="@CMAKE_BINARY_DIR@/../../install/argos3_bridge/lib/argos3_plugin/libmy_extensions"
                   label="my_loop_functions" />
 
   <!-- *********************** -->
@@ -71,7 +71,7 @@
   <!-- ****************** -->
   <visualization>
     <qt-opengl show_boundary="false">
-      <user_functions library="@CMAKE_BINARY_DIR@/../../install/argos3-bridge/lib/argos3_plugin/libmy_qtopengl_extensions"
+      <user_functions library="@CMAKE_BINARY_DIR@/../../install/argos3_bridge/lib/argos3_plugin/libmy_qtopengl_extensions"
                       label="my_qtopengl_user_functions" />
     </qt-opengl>
   </visualization>
