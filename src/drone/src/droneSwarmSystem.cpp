@@ -12,6 +12,8 @@ using std::map;
 #include "std_msgs/msg/byte_multi_array.hpp"
 #include "std_msgs/msg/u_int32.hpp"
 #include "argos3_bridge/msg/tick.hpp"
+#include "argos3_bridge/msg/arrows.hpp"
+#include "argos3_bridge/msg/rings.hpp"
 
 #include "drone/msg/pose_sharing.hpp"
 #include "drone/msg/message.hpp"
@@ -85,10 +87,10 @@ public:
 			}
 		);
 
-		m_drawArrowPublisher =
-			this->create_publisher<geometry_msgs::msg::Pose>("/drawArrows", 100);
-		m_drawRingPublisher =
-			this->create_publisher<geometry_msgs::msg::Pose>("/drawRings", 100);
+		m_drawArrowsPublisher =
+			this->create_publisher<argos3_bridge::msg::Arrows>("/drawArrows", 100);
+		m_drawRingsPublisher =
+			this->create_publisher<argos3_bridge::msg::Rings>("/drawRings", 100);
 		m_debugPublisher =
 			this->create_publisher<drone::msg::Debug>("/debug", 100);
 
@@ -147,14 +149,18 @@ public:
 		for (const auto& message : result.messages) {
 			sendMessage(message.id, message.binary);
 		}
-		// drawArrows
-		for (const auto& arrow: result.drawArrows) {
-			drawArrow(CVector3(), arrow.arrow, arrow.color);
+		// drawArrows and drawRings
+		auto arrowsMsg = argos3_bridge::msg::Arrows();
+		for (const auto& arrow : result.drawArrows) {
+			arrowsMsg.arrows.push_back(convertArrowToMsg(CVector3(), arrow.arrow, arrow.color));
 		}
-		// drawRings
-		for (const auto& ring: result.drawRings) {
-			drawRing(ring.middle, ring.radius, ring.color);
+		m_drawArrowsPublisher->publish(arrowsMsg);
+
+		auto ringsMsg = argos3_bridge::msg::Rings();
+		for (const auto& ring : result.drawRings) {
+			ringsMsg.rings.push_back(convertRingToMsg(ring.middle, ring.radius, ring.color));
 		}
+		m_drawRingsPublisher->publish(ringsMsg);
 		// Debug Msg
 		drone::msg::Debug debug;
 		debug.quality = result.debugMessage.quality;
@@ -189,7 +195,7 @@ public:
 		}
 	}
 
-	void drawArrow(CVector3 from, CVector3 to, SoNSArrow::Color color) {
+	geometry_msgs::msg::Pose convertArrowToMsg(CVector3 from, CVector3 to, SoNSArrow::Color color) {
 		from = m_CurrentTransform * from;
 		to = m_CurrentTransform * to;
 		geometry_msgs::msg::Pose arrow;
@@ -208,11 +214,10 @@ public:
 			case SoNSArrow::Color::BLACK:  arrow.orientation.w = 4; break;
 			default:                       arrow.orientation.w = 5; break;
 		}
-
-		m_drawArrowPublisher->publish(arrow);
+		return arrow;
 	}
 
-	void drawRing(CVector3 middle, double radius, SoNSRing::Color color) {
+	geometry_msgs::msg::Pose convertRingToMsg(CVector3 middle, double radius, SoNSRing::Color color) {
 		middle = m_CurrentTransform * middle;
 		geometry_msgs::msg::Pose ring;
 		ring.position.x = middle.GetX();
@@ -228,8 +233,7 @@ public:
 			case SoNSRing::Color::BLACK:  ring.orientation.w = 4; break;
 			default:                      ring.orientation.w = 5; break;
 		}
-
-		m_drawRingPublisher->publish(ring);
+		return ring;
 	}
 
 	void setVelocity(CVector3 v) {
@@ -292,8 +296,8 @@ private:
 	rclcpp::Subscription<drone::msg::PoseSharing>::SharedPtr m_PoseSharingSubscriber;
 	rclcpp::Publisher<drone::msg::PoseSharing>::SharedPtr m_PoseSharingPublisher;
 
-	rclcpp::Publisher<geometry_msgs::msg::Pose>::SharedPtr m_drawArrowPublisher;
-	rclcpp::Publisher<geometry_msgs::msg::Pose>::SharedPtr m_drawRingPublisher;
+	rclcpp::Publisher<argos3_bridge::msg::Arrows>::SharedPtr m_drawArrowsPublisher;
+	rclcpp::Publisher<argos3_bridge::msg::Rings>::SharedPtr m_drawRingsPublisher;
 	rclcpp::Publisher<drone::msg::Debug>::SharedPtr m_debugPublisher;
 
 	rclcpp::Subscription<std_msgs::msg::UInt32>::SharedPtr m_SimuTickSubscriber;

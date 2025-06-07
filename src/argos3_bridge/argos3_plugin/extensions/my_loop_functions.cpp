@@ -11,13 +11,13 @@ namespace argos {
          rclcpp::init(0, nullptr);
       }
       m_LoopFunctionRos2NodeHandle = std::make_shared<rclcpp::Node>("argos_loop_function_node");
-      m_debugDrawArrowSubscriber = m_LoopFunctionRos2NodeHandle->create_subscription<geometry_msgs::msg::Pose>(
+      m_debugDrawArrowsSubscriber = m_LoopFunctionRos2NodeHandle->create_subscription<argos3_bridge::msg::Arrows>(
          "/drawArrows", 5000,
-         std::bind(&CMyLoopFunctions::debugDrawArrowCallback, this, std::placeholders::_1)
+         std::bind(&CMyLoopFunctions::debugDrawArrowsCallback, this, std::placeholders::_1)
       );
-      m_debugDrawRingSubscriber = m_LoopFunctionRos2NodeHandle->create_subscription<geometry_msgs::msg::Pose>(
+      m_debugDrawRingsSubscriber = m_LoopFunctionRos2NodeHandle->create_subscription<argos3_bridge::msg::Rings>(
          "/drawRings", 5000,
-         std::bind(&CMyLoopFunctions::debugDrawRingCallback, this, std::placeholders::_1)
+         std::bind(&CMyLoopFunctions::debugDrawRingsCallback, this, std::placeholders::_1)
       );
 
       /* debug entity for arrow draw */
@@ -119,51 +119,55 @@ namespace argos {
    /****************************************/
    /****************************************/
 
-   void CMyLoopFunctions::debugDrawArrowCallback(const geometry_msgs::msg::Pose::SharedPtr pose) {
-      CVector3 from = CVector3(
-         pose->position.x,
-         pose->position.y,
-         pose->position.z
-      );
-      CVector3 to = CVector3(
-         pose->orientation.x,
-         pose->orientation.y,
-         pose->orientation.z
-      );
+   void CMyLoopFunctions::debugDrawArrowsCallback(const argos3_bridge::msg::Arrows::SharedPtr msg) {
+      for (const auto& pose : msg->arrows) {
+         CVector3 from = CVector3(
+            pose.position.x,
+            pose.position.y,
+            pose.position.z
+         );
+         CVector3 to = CVector3(
+            pose.orientation.x,
+            pose.orientation.y,
+            pose.orientation.z
+         );
 
-      CColor color;
-      switch ((int)pose->orientation.w) {
-         case 0:  color = CColor::RED;    break;
-         case 1:  color = CColor::GREEN;  break;
-         case 2:  color = CColor::BLUE;   break;
-         case 3:  color = CColor::YELLOW; break;
-         case 4:  color = CColor::BLACK;  break;
-         default: color = CColor::WHITE; break;
+         CColor color;
+         switch ((int)pose.orientation.w) {
+            case 0:  color = CColor::RED;    break;
+            case 1:  color = CColor::GREEN;  break;
+            case 2:  color = CColor::BLUE;   break;
+            case 3:  color = CColor::YELLOW; break;
+            case 4:  color = CColor::BLACK;  break;
+            default: color = CColor::WHITE; break;
+         }
+
+         m_pDebugEntity->GetArrows().emplace_back(from, to, color);
       }
-
-      m_pDebugEntity->GetArrows().emplace_back(from, to, color);
       m_bMoreIncomingMessages = true;
    }
 
-   void CMyLoopFunctions::debugDrawRingCallback(const geometry_msgs::msg::Pose::SharedPtr pose) {
-      CVector3 middle = CVector3(
-         pose->position.x,
-         pose->position.y,
-         pose->position.z
-      );
-      double radius = pose->orientation.x;
+   void CMyLoopFunctions::debugDrawRingsCallback(const argos3_bridge::msg::Rings::SharedPtr msg) {
+      for (const auto& pose : msg->rings) {
+         CVector3 middle = CVector3(
+            pose.position.x,
+            pose.position.y,
+            pose.position.z
+         );
+         double radius = pose.orientation.x;
 
-      CColor color;
-      switch ((int)pose->orientation.w) {
-         case 0:  color = CColor::RED;    break;
-         case 1:  color = CColor::GREEN;  break;
-         case 2:  color = CColor::BLUE;   break;
-         case 3:  color = CColor::YELLOW; break;
-         case 4:  color = CColor::BLACK;  break;
-         default: color = CColor::WHITE; break;
+         CColor color;
+         switch ((int)pose.orientation.w) {
+            case 0:  color = CColor::RED;    break;
+            case 1:  color = CColor::GREEN;  break;
+            case 2:  color = CColor::BLUE;   break;
+            case 3:  color = CColor::YELLOW; break;
+            case 4:  color = CColor::BLACK;  break;
+            default: color = CColor::WHITE; break;
+         }
+
+         m_pDebugEntity->GetRings().emplace_back(middle, radius, color);
       }
-
-      m_pDebugEntity->GetRings().emplace_back(middle, radius, color);
       m_bMoreIncomingMessages = true;
    }
 

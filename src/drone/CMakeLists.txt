@@ -51,6 +51,7 @@ ament_target_dependencies(debugNode
   std_msgs
   geometry_msgs
   mathlib
+  argos3_bridge
 )
 
 rosidl_get_typesupport_target(cpp_typesupport_target

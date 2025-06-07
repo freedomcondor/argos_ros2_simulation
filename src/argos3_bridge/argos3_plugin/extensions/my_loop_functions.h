@@ -15,6 +15,8 @@ namespace argos {
 #include "geometry_msgs/msg/pose.hpp"
 #include "std_msgs/msg/u_int32.hpp"
 #include "argos3_bridge/msg/tick.hpp"
+#include "argos3_bridge/msg/arrows.hpp"
+#include "argos3_bridge/msg/rings.hpp"
 
 namespace argos {
 
@@ -36,10 +38,10 @@ namespace argos {
    private:
       CDebugEntity* m_pDebugEntity;
       rclcpp::Node::SharedPtr m_LoopFunctionRos2NodeHandle;
-      rclcpp::Subscription<geometry_msgs::msg::Pose>::SharedPtr m_debugDrawArrowSubscriber;
-      rclcpp::Subscription<geometry_msgs::msg::Pose>::SharedPtr m_debugDrawRingSubscriber;
-      void debugDrawArrowCallback(const geometry_msgs::msg::Pose::SharedPtr pose);
-      void debugDrawRingCallback(const geometry_msgs::msg::Pose::SharedPtr pose);
+      rclcpp::Subscription<argos3_bridge::msg::Arrows>::SharedPtr m_debugDrawArrowsSubscriber;
+      rclcpp::Subscription<argos3_bridge::msg::Rings>::SharedPtr m_debugDrawRingsSubscriber;
+      void debugDrawArrowsCallback(const argos3_bridge::msg::Arrows::SharedPtr msg);
+      void debugDrawRingsCallback(const argos3_bridge::msg::Rings::SharedPtr msg);
 
       rclcpp::Publisher<std_msgs::msg::UInt32>::SharedPtr m_pSimuTick;
       rclcpp::Subscription<argos3_bridge::msg::Tick>::SharedPtr m_pSimuTickSubscriber;

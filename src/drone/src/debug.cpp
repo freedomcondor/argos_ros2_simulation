@@ -10,6 +10,8 @@ using std::map;
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/u_int32.hpp"
 #include "geometry_msgs/msg/pose.hpp"
+#include "argos3_bridge/msg/arrows.hpp"
+#include "argos3_bridge/msg/rings.hpp"
 
 #include "drone/msg/debug.hpp"
 
@@ -28,10 +30,10 @@ public:
 			}
 		);
 
-		m_drawArrowPublisher =
-			this->create_publisher<geometry_msgs::msg::Pose>("/drawArrows", 10);
-		m_drawRingPublisher =
-			this->create_publisher<geometry_msgs::msg::Pose>("/drawRings", 10);
+		m_drawArrowsPublisher =
+			this->create_publisher<argos3_bridge::msg::Arrows>("/drawArrows", 10);
+		m_drawRingsPublisher =
+			this->create_publisher<argos3_bridge::msg::Rings>("/drawRings", 10);
 
 		// Subscribe to simuTick topic to start timer on first signal
 		m_SimuTickSubscriber = this->create_subscription<std_msgs::msg::UInt32>("/simuTick", 10,
@@ -113,9 +115,10 @@ public:
 			RCLCPP_INFO(this->get_logger(), "   %f %d", quality, color);
 		}
 
-		// 绘制ring
+		// 绘制rings
+		auto ringsMsg = argos3_bridge::msg::Rings();
 		for (const auto& [id, debugMessage] : m_DebugMessageMap) {
-			drawRing(
+			ringsMsg.rings.push_back(convertRingToMsg(
 				CVector3(
 					debugMessage.middle.x,
 					debugMessage.middle.y,
@@ -123,12 +126,12 @@ public:
 				),
 				0.2,
 				m_color_index[debugMessage.quality]
-			);
+			));
 		}
-		//drawArrow(CVector3(), arrow.arrow, arrow.color);
+		m_drawRingsPublisher->publish(ringsMsg);
 	}
 
-	void drawArrow(CVector3 from, CVector3 to, uint16_t color) {
+	geometry_msgs::msg::Pose convertArrowToMsg(CVector3 from, CVector3 to, uint16_t color) {
 		geometry_msgs::msg::Pose arrow;
 		arrow.position.x = from.GetX();
 		arrow.position.y = from.GetY();
@@ -137,26 +140,24 @@ public:
 		arrow.orientation.y = to.GetY();
 		arrow.orientation.z = to.GetZ();
 		arrow.orientation.w = color;
-
-		m_drawArrowPublisher->publish(arrow);
+		return arrow;
 	}
 
-	void drawRing(CVector3 middle, double radius, uint16_t color) {
+	geometry_msgs::msg::Pose convertRingToMsg(CVector3 middle, double radius, uint16_t color) {
 		geometry_msgs::msg::Pose ring;
 		ring.position.x = middle.GetX();
 		ring.position.y = middle.GetY();
 		ring.position.z = middle.GetZ();
 		ring.orientation.x = radius;
 		ring.orientation.w = color;
-
-		m_drawRingPublisher->publish(ring);
+		return ring;
 	}
 
 private:
 	rclcpp::Subscription<drone::msg::Debug>::SharedPtr m_DebugMessageSubscriber;
 
-	rclcpp::Publisher<geometry_msgs::msg::Pose>::SharedPtr m_drawArrowPublisher;
-	rclcpp::Publisher<geometry_msgs::msg::Pose>::SharedPtr m_drawRingPublisher;
+	rclcpp::Publisher<argos3_bridge::msg::Arrows>::SharedPtr m_drawArrowsPublisher;
+	rclcpp::Publisher<argos3_bridge::msg::Rings>::SharedPtr m_drawRingsPublisher;
 
 	rclcpp::Subscription<std_msgs::msg::UInt32>::SharedPtr m_SimuTickSubscriber;
 
