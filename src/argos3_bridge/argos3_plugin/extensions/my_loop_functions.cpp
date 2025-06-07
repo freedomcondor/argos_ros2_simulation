@@ -39,15 +39,12 @@ namespace argos {
       }
 
       // tick ping pong
-		m_pSimuTick = m_LoopFunctionRos2NodeHandle->create_publisher<std_msgs::msg::UInt32>("/simuTick", 10);
-      m_pSimuTickSubscriber = m_LoopFunctionRos2NodeHandle->create_subscription<std_msgs::msg::String>(
+      m_pSimuTick = m_LoopFunctionRos2NodeHandle->create_publisher<std_msgs::msg::UInt32>("/simuTick", 10);
+      m_pSimuTickSubscriber = m_LoopFunctionRos2NodeHandle->create_subscription<argos3_bridge::msg::Tick>(
          "/simuTickBack", 1000,
-			[this](std_msgs::msg::String::UniquePtr msg) -> void {
-            // parse msg.data, break from "_", the first half is the id, the second half is a uint32_t, is tick number
-            std::string id = msg->data.substr(0, msg->data.find("_"));
-            std::string number = msg->data.substr(msg->data.find("_")+1);
-            m_mapTickIndex[id] = std::stoi(number);
-			}
+         [this](const argos3_bridge::msg::Tick::SharedPtr msg) -> void {
+            m_mapTickIndex[msg->id] = msg->tick;
+         }
       );
    }
 

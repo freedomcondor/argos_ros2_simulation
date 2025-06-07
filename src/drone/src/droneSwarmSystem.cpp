@@ -9,9 +9,9 @@ using std::map;
 
 #include "rclcpp/rclcpp.hpp"
 #include "geometry_msgs/msg/pose.hpp"
-#include "std_msgs/msg/u_int32.hpp"
-#include "std_msgs/msg/string.hpp"
 #include "std_msgs/msg/byte_multi_array.hpp"
+#include "std_msgs/msg/u_int32.hpp"
+#include "argos3_bridge/msg/tick.hpp"
 
 #include "drone/msg/pose_sharing.hpp"
 #include "drone/msg/message.hpp"
@@ -94,7 +94,7 @@ public:
 
 		// Subscribe to simuTick topic to start timer on first signal
 		m_SimuTickBackPublisher =
-			this->create_publisher<std_msgs::msg::String>("/simuTickBack", 100);
+			this->create_publisher<argos3_bridge::msg::Tick>("/simuTickBack", 100);
 		m_SimuTickSubscriber = this->create_subscription<std_msgs::msg::UInt32>("/simuTick", 10,
 			[this](const std_msgs::msg::UInt32::SharedPtr msg) -> void {
 				// Only start timer on first tick if not already started
@@ -109,9 +109,10 @@ public:
 				*/
 				step();
 				// send my ID back
-				std_msgs::msg::String simuTickMsg;
-				simuTickMsg.data = m_strMyID + "_" + std::to_string(msg->data);
-				m_SimuTickBackPublisher->publish(simuTickMsg);
+				auto tickMsg = argos3_bridge::msg::Tick();
+				tickMsg.id = m_strMyID;
+				tickMsg.tick = msg->data;
+				m_SimuTickBackPublisher->publish(tickMsg);
 			}
 		);
 	}
@@ -296,7 +297,7 @@ private:
 	rclcpp::Publisher<drone::msg::Debug>::SharedPtr m_debugPublisher;
 
 	rclcpp::Subscription<std_msgs::msg::UInt32>::SharedPtr m_SimuTickSubscriber;
-	rclcpp::Publisher<std_msgs::msg::String>::SharedPtr m_SimuTickBackPublisher;
+	rclcpp::Publisher<argos3_bridge::msg::Tick>::SharedPtr m_SimuTickBackPublisher;
 
 	rclcpp::TimerBase::SharedPtr m_Timer; // 定时器
 

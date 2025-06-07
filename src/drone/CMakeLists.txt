@@ -25,6 +25,7 @@ find_package(geometry_msgs REQUIRED)
 find_package(mathlib REQUIRED)
 find_package(sonslib REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
+find_package(argos3_bridge REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/PoseSharing.msg"
@@ -41,6 +42,7 @@ ament_target_dependencies(droneSwarmSystem
   geometry_msgs
   mathlib
   sonslib
+  argos3_bridge
 )
 
 add_executable(debugNode src/debug.cpp)

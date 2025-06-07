@@ -57,6 +57,7 @@ ament_target_dependencies(my_extensions
   std_msgs
   geometry_msgs
 )
+target_link_libraries(my_extensions "${cpp_typesupport_target}")
 if(ARGOS_USE_DOUBLE)
   target_compile_definitions(my_extensions PUBLIC BT_USE_DOUBLE_PRECISION)
 endif(ARGOS_USE_DOUBLE)
