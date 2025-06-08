@@ -49,6 +49,10 @@ namespace SoNSLib {
 				return "SCALE";
 			case CommandType::ASSIGN:
 				return "ASSIGN";
+			case CommandType::ASSIGN_ACKNOWLEDGEMENT:
+				return "ASSIGN_ACKNOWLEDGEMENT";
+			case CommandType::ASSIGN_BREAK:
+				return "ASSIGN_BREAK";
 			default:
 				return "UNKNOWN";
 		}
@@ -96,6 +100,28 @@ namespace SoNSLib {
 					break;
 				case CommandType::ASSIGN:
 					cmdlog << parseString(cmd, contentI);
+					break;
+				case CommandType::ASSIGN_ACKNOWLEDGEMENT:
+					{
+						cmdlog << "<id> = " << parseString(cmd, contentI) << " ";
+						uint16_t size = parseUint16(cmd, contentI);
+						cmdlog << "<scale> = " << size << " ";
+						for (int i = 0; i < size; i++) {
+							cmdlog << parseString(cmd, contentI) << " "
+								<< parseUint16(cmd, contentI);
+						}
+					}
+					break;
+				case CommandType::ASSIGN_BREAK:
+					{
+						cmdlog << "<id> = " << parseString(cmd, contentI) << " ";
+						uint16_t size = parseUint16(cmd, contentI);
+						cmdlog << "<scale> = " << size << " ";
+						for (int i = 0; i < size; i++) {
+							cmdlog << parseString(cmd, contentI) << " "
+								<< parseUint16(cmd, contentI);
+						}
+					}
 					break;
 				default:  break;
 			}

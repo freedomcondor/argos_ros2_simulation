@@ -150,14 +150,10 @@ namespace SoNSLib {
 			double his_sonsQuality;
 			parseRecruitMessage(command.binary, index, his_sonsId, his_sonsQuality);
 			if ((sons_->ExistsInNeighbors(fromId)) &&
-			    (
-					( (his_sonsId != sons_->sonsId_str_) &&
-					  (his_sonsQuality > bestSonsQuality) &&
-					  (((m_lockmap.find(his_sonsId) == m_lockmap.end()) || (m_lockmap[his_sonsId] < 0))) &&
-					  (sons_->branchQualities_.find(his_sonsId) == sons_->branchQualities_.end())
-					)
-					||
-					(fromId == sons_->assignTo_str_)
+			    ((his_sonsId != sons_->sonsId_str_) &&
+				 (his_sonsQuality > bestSonsQuality) &&
+				 (((m_lockmap.find(his_sonsId) == m_lockmap.end()) || (m_lockmap[his_sonsId] < 0))) &&
+				 (sons_->branchQualities_.find(his_sonsId) == sons_->branchQualities_.end())
 				)
 			   ) {
 				bestFromId = fromId;

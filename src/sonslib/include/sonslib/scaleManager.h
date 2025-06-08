@@ -27,10 +27,10 @@ namespace SoNSLib {
 		vector<uint8_t> generateScaleMessage(map<string, uint16_t> _scale, uint16_t _depth);
 		void parseScaleMessage(const vector<uint8_t>& _binary, uint& i, map<string, uint16_t>& _scale, uint16_t& _depth);
 
-		map<string, uint16_t> AddScale(const map<string, uint16_t>& a, const map<string, uint16_t>& b);
-		void AddScaleBtoA(map<string, uint16_t>& a, const map<string, uint16_t>& b);
-		map<string, uint16_t> SubScale(const map<string, uint16_t>& a, const map<string, uint16_t>& b);
-		void SubScaleBfromA(map<string, uint16_t>& a, const map<string, uint16_t>& b);
+		static map<string, uint16_t> AddScale(const map<string, uint16_t>& a, const map<string, uint16_t>& b);
+		static void AddScaleBtoA(map<string, uint16_t>& a, const map<string, uint16_t>& b);
+		static map<string, uint16_t> SubScale(const map<string, uint16_t>& a, const map<string, uint16_t>& b);
+		static void SubScaleBfromA(map<string, uint16_t>& a, const map<string, uint16_t>& b);
 	};
 }
 

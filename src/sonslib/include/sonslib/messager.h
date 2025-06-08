@@ -34,6 +34,8 @@ namespace SoNSLib {
 			HEARTBEAT,
 			SCALE,
 			ASSIGN,
+			ASSIGN_ACKNOWLEDGEMENT,
+			ASSIGN_BREAK,
 		};
 
 		struct Command {
@@ -160,6 +162,25 @@ namespace SoNSLib {
 		}
 		string static parseString(const vector<uint8_t>& binary) {
 			uint tmp = 0; return parseString(binary, tmp);
+		}
+
+		// String Value Map ------------------------------------------------
+		void static pushIdNumberMap(vector<uint8_t>& binary, const map<string, uint16_t>& theMap) {
+			CMessager::pushUint16(binary, theMap.size());
+			for (auto& [key, value] : theMap) {
+				CMessager::pushString(binary, key);
+				CMessager::pushUint16(binary, value);
+			}
+		}
+		static map<string, uint16_t> parseIdNumberMap(const vector<uint8_t>& binary, uint& index) {
+			map<string, uint16_t> theMap;
+			uint16_t size = CMessager::parseUint16(binary, index);
+			for (uint16_t j = 0; j < size; j++) {
+				string key = CMessager::parseString(binary, index);
+				uint16_t value = CMessager::parseUint16(binary, index);
+				theMap[key] = value;
+			}
+			return theMap;
 		}
 
 		// member --------------------------------------------------------------

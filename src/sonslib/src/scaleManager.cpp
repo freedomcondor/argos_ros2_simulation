@@ -48,6 +48,7 @@ namespace SoNSLib {
 
 			// scale
 			AddScaleBtoA(sons_->scale_, robotp->scale);
+			AddScaleBtoA(sons_->scale_, robotp->assignScaleOffset);
 		}
 		// add myself depth and scale
 		sons_->depth_++;
@@ -58,6 +59,7 @@ namespace SoNSLib {
 		// sum parent scale to my scale
 		if (sons_->parent_RobotP_ != nullptr) {
 			AddScaleBtoA(sons_->totalScale_, sons_->parent_RobotP_->scale);
+			AddScaleBtoA(sons_->totalScale_, sons_->parent_RobotP_->assignScaleOffset);
 		}
 
 		//send my scale to my parent
@@ -67,7 +69,9 @@ namespace SoNSLib {
 
 		// send children their scale (subtract)
 		for (const auto& [id, robotp] : sons_->children_mapRobotP_) {
-			sons_->messager_.sendCommand(id, CMessager::CommandType::SCALE, generateScaleMessage(SubScale(sons_->totalScale_, robotp->scale), 0));
+			auto scale = SubScale(sons_->totalScale_, robotp->scale);
+			SubScaleBfromA(scale, robotp->assignScaleOffset);
+			sons_->messager_.sendCommand(id, CMessager::CommandType::SCALE, generateScaleMessage(scale, 0));
 		}
 
 		// for debug: draw rings to show number of drones
@@ -90,23 +94,13 @@ namespace SoNSLib {
 	vector<uint8_t> SoNSScaleManager::generateScaleMessage(map<string, uint16_t> _scale, uint16_t _depth) {
 		vector<uint8_t> content;
 		CMessager::pushUint16(content, _depth);
-		CMessager::pushUint16(content, _scale.size());
-		for (auto& [key, value] : _scale) {
-			CMessager::pushString(content, key);
-			CMessager::pushUint16(content, value);
-		}
+		CMessager::pushIdNumberMap(content, _scale);
 		return content;
 	}
 
 	void SoNSScaleManager::parseScaleMessage(const vector<uint8_t>& _binary, uint& i, map<string, uint16_t>& _scale, uint16_t& _depth) {
 		_depth = CMessager::parseUint16(_binary, i);
-		_scale.clear();
-		uint16_t size = CMessager::parseUint16(_binary, i);
-		for (uint16_t j = 0; j < size; j++) {
-			string key = CMessager::parseString(_binary, i);
-			uint16_t value = CMessager::parseUint16(_binary, i);
-			_scale[key] = value;
-		}
+		_scale = CMessager::parseIdNumberMap(_binary, i);
 	}
 
 	map<string, uint16_t> SoNSScaleManager::AddScale(const map<string, uint16_t>& a, const map<string, uint16_t>& b) {

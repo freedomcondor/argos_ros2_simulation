@@ -19,7 +19,7 @@ namespace SoNSLib {
 		RegisterModule(std::shared_ptr<SoNSConnector>(&sonsConnector, [](SoNSConnector*){}));
 		RegisterModule(std::shared_ptr<SoNSAssigner>(&sonsAssigner, [](SoNSAssigner*){}));
 		RegisterModule(std::shared_ptr<SoNSScaleManager>(&sonsScaleManager, [](SoNSScaleManager*){}));
-		RegisterModule(std::shared_ptr<SoNSFlocking>(&sonsFlocking, [](SoNSFlocking*){}));
+		//RegisterModule(std::shared_ptr<SoNSFlocking>(&sonsFlocking, [](SoNSFlocking*){}));
 	}
 
 	void SoNS::Init(string _myId, string _myType) {
@@ -123,6 +123,26 @@ namespace SoNSLib {
 				Assign(id, parent_RobotP_->id);
 		}
 
+		/*
+		// find the nearest child, and assign other to it
+		if (children_mapRobotP_.size() > 0) {
+			double min_distance = 100000000;
+			string min_id;
+			for (const auto& [id, childp] : children_mapRobotP_) {
+				double distance = childp->GetPosition().Length();
+				if (distance < min_distance) {
+					min_distance = distance;
+					min_id = id;
+				}
+			}
+			for (const auto& [id, childp] : children_mapRobotP_) {
+				if (id != min_id) {
+					Assign(id, min_id);
+				}
+			}
+		}
+		*/
+
 		log_ << "--- step result --------" << endl;
 		log_ << "\tparent : --------" << endl;
 		if (parent_RobotP_ != nullptr) log_ << "\t\t" << parent_RobotP_->id << " " << parent_RobotP_->heartbeatCD << endl;
@@ -132,6 +152,10 @@ namespace SoNSLib {
 		}
 		log_ << "\tscale : --------" << endl;
 		for (const auto& [key, value]: scale_) {
+			log_ << "\t\t" << key << " " << value << endl;
+		}
+		log_ << "\ttotal scale : --------" << endl;
+		for (const auto& [key, value]: totalScale_) {
 			log_ << "\t\t" << key << " " << value << endl;
 		}
 		log_ << "\tdepth : --------" << depth_ << endl;

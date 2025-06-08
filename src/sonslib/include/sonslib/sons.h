@@ -22,10 +22,10 @@ using namespace swarmMathLib;
 namespace SoNSLib {
 	//- structs ---------------------------------------------------------------------------------------------
 	struct SoNSParameters {
-		double seenCDTime = 1;
-		double heartbeatCDTime = 1;
+		double seenCDTime = 0.5;
+		double heartbeatCDTime = 0.5;
 		double recruitWaitingTime = 1;
-		uint16_t maxDepth = 51;
+		uint16_t maxDepth = 65;
 	};
 
 	struct SoNSRobot {
@@ -39,6 +39,7 @@ namespace SoNSLib {
 		map<string, double> branchQualities;
 		// scale manager
 		map<string, uint16_t> scale;
+		map<string, uint16_t> assignScaleOffset;
 		uint16_t depth;
 
 		CTransform transform;
@@ -132,7 +133,13 @@ namespace SoNSLib {
 			map<string, SoNSRobot> neighbors_mapRobot_;
 			SoNSRobot* parent_RobotP_;
 			map<string, SoNSRobot*> children_mapRobotP_;
+			inline map<string, SoNSRobot*> GetTopologicalNeighbors() {
+				map<string, SoNSRobot*> T_neighbors = children_mapRobotP_;
+				if (parent_RobotP_ != nullptr) T_neighbors[parent_RobotP_->id] = parent_RobotP_;
+				return T_neighbors;
+			}
 			bool ExistsInNeighbors(string _id) {return neighbors_mapRobot_.find(_id) != neighbors_mapRobot_.end();}
+			bool ExistsInTopologicalNeighbors(string _id) {auto T = GetTopologicalNeighbors(); return T.find(_id) != T.end();}
 			bool ExistsInChildren(string _id) {return children_mapRobotP_.find(_id) != children_mapRobotP_.end();}
 			bool ExistsInParent(string _id) {return parent_RobotP_ != nullptr && parent_RobotP_->id == _id;}
 

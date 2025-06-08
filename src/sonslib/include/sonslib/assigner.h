@@ -17,11 +17,16 @@ namespace SoNSLib {
 	class SoNSAssigner: public SoNSModule {
 	public:
 		SoNSAssigner(SoNS& sons) : SoNSModule(sons) {};
+		void PreStep() override;
 		void Step(double time);
 		void AddParent(string id) override;
 		void AddChild(string id) override;
 		void Remove(string id) override;
 		void Assign(std::string _child_id, std::string _to_id) override;
+
+		void parseRecruitMessage(const vector<uint8_t>& _binary, uint& i, string& _his_id, double& _his_quality);
+		vector<uint8_t> generateAssignSpecialMessage(const string& _id, const map<string, uint16_t>& _scale);
+		void parseAssignSpecialMessage(const vector<uint8_t>& _binary, string& _id, map<string, uint16_t>& _scale);
 	};
 }
 
