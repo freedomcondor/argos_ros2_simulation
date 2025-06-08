@@ -125,6 +125,7 @@ namespace SoNSLib {
 
 			// scale manager
 			map<string, uint16_t> scale_;
+			map<string, uint16_t> totalScale_;
 			uint16_t depth_;
 
 			// neighbours
